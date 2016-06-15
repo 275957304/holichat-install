@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>生成订单</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1, maximum-scale=1, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="format-detection" content="telephone=no"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+<meta name="distribution" content="global" />
+<meta name="author" content="活力圈" />
+<meta name="webcrawlers" content="all" />
+<link rel="stylesheet" type="text/css" href="../../dist/css/hlq.min.css">
+<script type="text/javascript" src="../../dist/js/seajs/2.1.1/sea.js"></script>
+<script type="text/javascript" src="../../dist/js/sea_config.js"></script>
+</head>
+<body>
+<header class="header">
+    <div class="bnt-back" onclick="history.back()"><i class="icon-back"></i></div>
+    <h1>生成订单</h1>
+</header>
+<footer class="footer">
+    <a class="weui_btn weui_btn_warn" id="toPay" href="javascript:void(0)">去支付</a>
+</footer>
+<div class="main">
+    <div class="weui_list_text">        
+    </div> 
+	<div class="weui_cells_title">参赛者名单</div>	
+    <div id="enrollInfos" class="weui_cells">
+  
+    </div>	
+	<div class="weui_cells_title"><span class="pull-right text-danger">¥<b id="amount"></b></span>合计支付</div>
+	<div class="weui_cells weui_cells_checkbox">
+        <label for="wx_pay" class="weui_cell weui_check_label p10">            
+            <div class="weui_cell_bd weui_cell_primary">
+                <p><span class="pay-wx">微信支付</span></p>
+            </div>
+			<div class="weui_cell_hd">
+                <input type="radio" id="wx_pay" checked="checked" value="wx_pay" class="weui_check" name="radio">
+                <i class="weui_icon_checked"></i>
+            </div>
+        </label>
+    </div>
+</div>
+<script type="text/javascript">
+seajs.use(['util','jweixin'], function(a){
+    var lock = false,
+        order = -1,
+        body_txt ='',
+        event_enroll_id = a.getURLVar('event_enroll_id'),
+        event_id = a.getURLVar('event_id'),
+        project_id = a.getURLVar('project_id'),
+        group_id = a.getURLVar('group_id'),
+        group_id = a.getURLVar('group_id'),
+        session = a.getItem('session'),
+        uid = a.getItem('uid'),
+        openid = a.getItem('openid'),
+        _html ="",
+        href = window.location.href,
+        url = href.split('#')[0];
+
+    //获取订单号
+    $.ajax({
+        type:'POST',
+        url:a.apiUrl.eventEnrollSelectURL,
+        data:{
+            event_enroll_id_params : '[' + event_enroll_id + ']',
+            session : a.getItem('session')
+        },
+        async: false,
+        dataType: 'json',
+        success: function(data){            
+            if(data.ret == 0){
+                order = data.data.order_no;
+            }
+        },
+        error: function(xhr){
+            console.log(xhr);                         
+        }
+    });
+
+
+    //赛事订单详细
+    $.ajax({
+        url: a.apiUrl.eventOrderInfoURL,
+        data: {
+            session : session,
+            uid : uid,
+            event_enroll_id: event_enroll_id
+        },
+        type: 'get',
+        dataType: 'json',
+        beforeSend : function(){
+            a.tips("加载中...",1);
+        },
+        success : function(data){
+            console.log(data)
+            $('.tips-message').hide();
+            switch(data.ret){
+                case 6111: return a.tips("赛事订单错误");break;
+                case 6115: return a.tips("订单错误");break;
+            };
+            body_txt = data.data.title;
+            $('#amount').text(data.data.amount);
+            $('.weui_list_text').append('<h4 class="weui_media_title">'+ body_txt +'</h4><p>订单编号：'+ order +'</p><p>报名时间：'+ data.data.enroll_time +'</p>');
+            $.each(data.data.enroll_infos,function(index,item){
+                item.phone ? _html += '<div class="weui_cell"><div class="weui_cell_bd weui_cell_primary">'+ item.truename +'</div><div class="weui_cell_ft">'+ item.phone +'</div></div>' : _html += '<div class="weui_cell"><div class="weui_cell_bd weui_cell_primary">'+ item.truename +'</div></div>' ;                
+            })
+            $('#enrollInfos').append(_html);
+        },
+        error : function(res){
+            a.tips("网络有点卡");
+        }
+    });
+
+
+    //调用支付
+    $("#toPay").on('click',function(){
+        console.log(openid);
+
+        if (lock) return false;
+        if(!a.isWeixin()){
+            a.tips("请使用微信浏览器操作！~");
+            return false;  
+        }
+
+        var postData = {
+            openid: openid,
+            order : order,
+            body  : body_txt,
+            appid : 'wxcc5c198d146a1779'
+        };
+        
+        $.post(a.apiUrl.weixinUnifiedorderURL,postData,function(response){
+            var res = JSON.parse(response);
+            console.log(res);            
+            var nonce_str = res.data.nonce_str,
+                prepay_id = res.data.prepay_id,
+                sign = res.data.sign,
+                numTime = res.data.time;
+            var time = numTime.toString();   
+
+            //微信JS签名
+            $.get(a.apiUrl.wxSignURL,{'appid':'wxcc5c198d146a1779','url':url},function(response){ 
+                wx.config({
+                    debug     : false,
+                    appId     : 'wxcc5c198d146a1779',
+                    timestamp : response.data.timestamp,
+                    nonceStr  : response.data.noncestr,
+                    signature : response.data.signature,
+                    jsApiList : ['checkJsApi','chooseWXPay']
+                });
+                
+                wx.ready(function(){
+                    lock = true;
+                    wx.chooseWXPay({
+                        timestamp: time, // 支付签名时间戳，注意微信jssdk中的所有使用timestamp字段均为小写。但最新版的支付后台生成签名使用的timeStamp字段名需大写其中的S字符
+                        nonceStr: nonce_str, // 支付签名随机串，不长于 32 位
+                        package:'prepay_id=' + prepay_id , // 统一支付接口返回的prepay_id参数值，提交格式如：prepay_id=***）
+                        signType: 'MD5', // 签名方式，默认为'SHA1'，使用新版支付需传入'MD5'
+                        paySign: sign, // 支付签名
+                        success: function (res){
+                            $('#dialog1').show();
+                            // 支付成功后的回调函数
+                            window.location.href = 'pay_info.html?event_enroll_id=' + event_enroll_id + "&event_id=" + event_id + "&project_id=" + project_id +'&group_id=' + group_id + '&guide=1';
+                        }
+                    }); 
+                    
+                    wx.error(function(res){
+                        // config信息验证失败会执行error函数，如签名过期导致验证失败，具体错误信息可以打开config的debug模式查看，也可以在返回的res参数中查看，对于SPA可以在这里更新签名。
+                    });                 
+                    wx.hideOptionMenu();                    
+                });         
+
+            },'json');  
+            
+        })      
+        
+    });
+
+
+
+})  
+</script>
+</body>
+</html>

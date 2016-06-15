@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>活力圈</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1, maximum-scale=1, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="format-detection" content="telephone=no"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+<meta name="distribution" content="global" />
+<meta name="author" content="活力圈" />
+<meta name="webcrawlers" content="all" />
+</head>
+<body>
+<script type="text/javascript">
+	function getUrlParam(name){
+		var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+		var r = window.location.search.substr(1).match(reg);
+		if (r != null) return unescape(r[2]); return null;
+	};
+	var setUrl='';
+	var source = getUrlParam('source');
+	var event_id = getUrlParam('event_id');
+	if(source){
+		setUrl = '?source=' + source
+	}
+	if(event_id){
+		setUrl = '?event_id=' + event_id
+	}	
+	window.location.href= "https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxcc5c198d146a1779&redirect_uri=" + encodeURIComponent("http://m.holichat.com/ceshi/login.html?" + setUrl ) + "&response_type=code&scope=snsapi_userinfo#wechat_redirect";
+</script>
+</div>
+</body>
+</html>

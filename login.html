@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>活力圈</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1, maximum-scale=1, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="format-detection" content="telephone=no"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+<meta name="distribution" content="global" />
+<meta name="author" content="活力圈" />
+<meta name="webcrawlers" content="all" />
+<script src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+<script src="dist/js/zepto.min.js"></script>
+<script src="dist/js/Base64.js"></script>
+</head>
+<body>
+<div id="data"></div>
+<script type="text/javascript">
+var baseURL = "http://121.41.0.124:81/";
+function getURLVar(name){
+	var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+	var r = window.location.search.substr(1).match(reg);
+	if (r != null) return unescape(r[2]); return null;
+};
+function setItem(a,b){
+	if(window.localStorage){
+		window.localStorage.setItem("hlq_"+a,b);
+	}else{
+		var c=new Date;
+		c.setTime(c.getTime()+31536e6),
+		document.cookie="hlq_"+a+"="+escape(b)+";expires="+c.toGMTString()
+	}
+}
+function isWeixin(){
+	return "micromessenger" == navigator.userAgent.toLowerCase().match(/MicroMessenger/i)
+}
+window.onload = function(){	
+	if(isWeixin){	
+		var code = getURLVar('code');
+		var source = getURLVar('source');
+		var event_id = getURLVar('event_id');
+		if(code){
+			//获取微信接口
+			var href = window.location.href;
+			var url = href.split('#')[0];
+			$.ajax({
+				type: 'get',
+				url: "http://app.holichat.com/other/api/wx_js_sign",
+				data: {
+					appid:'wxcc5c198d146a1779', 
+					url:url
+				},
+				dataType: 'json',
+				async: false,//改为同步方式
+				success: function(data){
+					console.log(data);					
+					//通过config接口注入权限验证配置
+					wx.config({
+						debug     : false, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
+						appId     : "wxcc5c198d146a1779", // 必填，公众号的唯一标识
+						timestamp : data.data.timestamp, // 必填，生成签名的时间戳
+						nonceStr  : data.data.noncestr, // 必填，生成签名的随机串
+						signature : data.data.signature,// 必填，签名，见附录1
+						jsApiList : ["openLocation", "getLocation"] // 必填，需要使用的JS接口列表，所有JS接口列表见附录2
+					});
+					
+					wx.ready(function(){			
+						wx.getLocation({
+							type: 'wgs84', // 默认为wgs84的gps坐标，如果要返回直接给openLocation用的火星坐标，可传入'gcj02'
+							success: function (res) {
+								setItem("latitude", res.latitude);
+								setItem("longitude", res.longitude);
+								var locations = [res.longitude,res.latitude].join();
+								$.ajax({
+									type: 'post',
+									url: baseURL + 'other/api/get_geocoding',  //逆地理编码
+									data: {'location':locations},
+									async: false,//改为同步方式
+									dataType: 'json',
+									success:function(response){					
+										var city = response.data.addressComponent.adcode.substring(0,4) + '00';	
+										var cityName = response.data.addressComponent.city;
+										setItem("city_id", city);
+										setItem("city_name", cityName);						
+									}			
+								});
+							}
+						});
+					});
+				}
+			});			
+			
+			$.get(baseURL + 'login/sdk/wx_access_token',{'appid':'wxcc5c198d146a1779', "code":code, 'grant_type':'authorization_code'},function(data){
+				console.log(data);
+				var access_token = data.data.access_token,
+					openid = data.data.openid;	
+					setItem("openid", openid);
+				var params = {
+					"access_token" : access_token,
+					"open_id" : openid,
+				}				
+				var base64 = BASE64.encoder(JSON.stringify(params));
+				$.ajax({        
+					url: baseURL + 'login/sdk/other_login',
+					type: 'post',
+					async: false,//改为同步方式
+					data: {
+						type: 'weixin', 
+						platform : 'weixin',
+						channel:5000,
+						params: base64						
+					},
+					dataType: 'json',
+					success: function(data){
+						console.log(data);
+						setItem("session", data.data.session);
+						setItem("uid", data.data.uid);
+						setItem("device", data.data.device);
+						setItem("platform", data.data.platform);
+						if(source == 'user_event'){
+							window.location.href = "event/user_event.html";
+						}else if(event_id){
+							window.location.href = "event/detail/index.html?event_id=" + event_id	
+						}else{
+							window.location.href = "event/index.html";
+						}
+						
+					},
+					error: function(res) {
+						alert(res);
+					}
+				})
+			},'json')		
+		}	
+	}
+}
+</script>
+</div>
+</body>
+</html>

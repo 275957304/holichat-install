@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>参赛须知</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1, maximum-scale=1, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="format-detection" content="telephone=no"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+<meta name="distribution" content="global" />
+<meta name="author" content="活力圈" />
+<meta name="webcrawlers" content="all" />
+<link rel="stylesheet" type="text/css" href="../../dist/css/hlq.min.css">
+<script type="text/javascript" src="../../dist/js/seajs/2.1.1/sea.js"></script>
+<script type="text/javascript" src="../../dist/js/sea_config.js"></script>
+</head>
+<body class="b-white">
+<header class="header">
+    <div class="bnt-back" onclick="history.back()"><i class="icon-back"></i></div>
+    <h1>参赛须知</h1>
+</header>
+
+<footer class="footer">
+	<div class="btn_group">
+		<div class="btn_default"><a class="weui_btn weui_btn_warning" id="back" href="javascript:void(0)">不同意</a></div>
+		<div class="btn_default"><a class="weui_btn weui_btn_warn" id="agreeBtn" href="javascript:void(0)">同意</a></div>
+	</div>
+</footer>
+
+<div class="main">
+    <div class="article">   
+
+    </div>
+</div>
+<script type="text/javascript">
+seajs.use(['util'], function(a){
+	var event_id = a.getURLVar('event_id'); 
+    var event_project_id = a.getURLVar('event_project_id'); 
+    var event_group_id = a.getURLVar('event_group_id'); 
+	setTimeout(function(){
+		$('#back').on('click',function(){
+			window.history.back();
+		})
+	},800);
+    $.ajax({
+        type: 'get',
+        url: a.apiUrl.getEnrollInfoURL,
+        data: {
+            session:a.getItem("session"), 
+            uid:a.getItem("uid"), 
+            event_id:event_id
+        },
+        dataType: 'json',
+        beforeSend : function(){
+            a.tips("加载中...",1);
+        },
+        success: function(data) {
+            $('.tips').hide();
+            if(data.data.notes){
+                $('.article').html(data.data.notes)
+            }   
+        },
+        error: function(xhr, type) {
+            a.tips("网络错误");
+        }
+    });
+    $('#agreeBtn').on('tap',function(){
+        window.location.href = 'group_info.html?event_id=' + event_id + "&event_project_id=" + event_project_id + "&event_group_id=" + event_group_id;
+    })
+
+
+	//禁用微信分享
+	var href = window.location.href;
+	var url = href.split('#')[0];
+	$.ajax({
+		type: 'get',
+		url: a.apiUrl.wxSignURL,
+		data: {
+			appid:'wxcc5c198d146a1779', 
+			url:url
+		},
+		dataType: 'json',
+		success: function(data){
+			console.log(data);					
+			//通过config接口注入权限验证配置
+			wx.config({
+				debug     : false, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
+				appId     : "wxcc5c198d146a1779", // 必填，公众号的唯一标识
+				timestamp : data.data.timestamp, // 必填，生成签名的时间戳
+				nonceStr  : data.data.noncestr, // 必填，生成签名的随机串
+				signature : data.data.signature,// 必填，签名，见附录1
+				jsApiList : ["onMenuShareTimeline", "onMenuShareAppMessage", "onMenuShareQQ", "onMenuShareWeibo"] // 必填，需要使用的JS接口列表，所有JS接口列表见附录2
+			});
+			
+			wx.ready(function(){		
+				wx.hideOptionMenu();
+			});
+		}
+	});
+})
+    
+</script>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>组别选择</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1, maximum-scale=1, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="format-detection" content="telephone=no"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+<meta name="distribution" content="global" />
+<meta name="author" content="活力圈" />
+<meta name="webcrawlers" content="all" />
+<link rel="stylesheet" type="text/css" href="../../dist/css/hlq.min.css">
+<script type="text/javascript" src="../../dist/js/seajs/2.1.1/sea.js"></script>
+<script type="text/javascript" src="../../dist/js/sea_config.js"></script>
+</head>
+<body>
+<header class="header">
+    <div class="bnt-back" onclick="history.back()"><i class="icon-back"></i></div>
+    <h1>组别选择</h1>
+</header>
+<footer class="footer">
+    <a class="weui_btn weui_btn_warn" id="next" href="javascript:void(0)">下一步</a>
+</footer>
+
+<div class="main">	
+    <div class="tab">
+        <ul class="tab-nav">
+            <li class="current">单人组</li>
+            <li>多人组</li>
+        </ul>
+        <ul class="tab-content">
+            <li id="single" class="tab-item"></li>
+            <li id="twofold" class="tab-item"></li>
+        </ul>
+    </div>	
+	<p id="d"></p>
+</div>
+<style>
+.tab-content .weui_cells{margin-top:-1px;}
+</style>
+<script type="text/javascript">
+seajs.use(['util','login','tab'], function(a,b,c){
+    var tab = new tabs.Scroll('.tab', {role:'tab'}),
+		event_id = a.getURLVar('event_id'),
+	    event_project_id ="",
+		event_group_id="";	
+		console.log(a);
+ 
+    $.ajax({
+        type: 'get',
+        url: a.apiUrl.getEnrollInfoURL,
+        data: {
+            session:a.getItem('session'), 
+            uid:a.getItem('uid'), 
+            event_id:event_id
+        },
+        dataType: 'json',
+        beforeSend : function(){
+            a.tips("加载中...",1);
+        },
+        success: function(data){
+            $('.tips').hide();
+			if(data.data.project.length == 0){
+				a.tips("没有组别信息");
+				setTimeout(function(){window.history.back();},1500)
+			};
+			
+			var isShuan = false,
+				single=[],  //单人组
+				twofold=[];	//双人组
+			
+			var isShuan = false;			
+			var isDan = false;			
+            $.each(data.data.project, function(index,item){
+				var s = {}; s.title = item.title; s.group = [];
+				var d = {}; d.title = item.title; d.group = [];
+				$.each(item.group, function(i,val){					
+					if(val.single_person == 1){	
+						isDan = true;
+						d.group.push(val);
+					}else{
+						isShuan = true;
+						s.group.push(val);
+					}
+				});
+				if(s.group.length != 0){
+					twofold.push(s);
+				}
+				if(d.group.length != 0){
+					single.push(d);
+				}				
+            });
+			
+			if(isShuan && isDan){
+				$('#single').append(groupList(single,false));
+				$('#twofold').append(groupList(twofold,true));
+			}else{
+				$('.main').empty();
+				$('.main').append(groupList(single,false));
+				$('.main').append(groupList(twofold,true));
+			}
+			
+        },
+        error: function(res) {
+            a.tips("网络有点卡");
+        }
+    });
+	
+	function groupList(item,mono){
+		mono ? st='t' : st='s';
+		var _html="";
+		$.each(item,function(index,item){
+			_html += '<div class="weui_cells_title">'+ item.title +'</div><div class="weui_cells weui_cells_checkbox">';
+			$.each(item.group,function(i,val){
+				_html += '<label for="'+index + st + i +'" class="weui_cell p10 weui_check_label">';
+				_html += '<div class="weui_cell_bd weui_cell_primary f14">'+ val.title +'';
+				if(mono){
+					parseInt(val.person_min) == parseInt(val.person_max) ? _html += '<span class="label">'+ val.person_max +'人</span>' : _html += '<span class="label">'+ val.person_min +'~'+ val.person_max +'人</span>';
+				}	
+				if(val.free_type == 'TF'){
+					_html += '<p class="dos"><span class="vip">会员:'+ ( val.member_fee == 0 ? '免费' : val.member_fee + '元/组'  ) +'</span>';
+					_html += '非会员:'+ ( val.nomember_fee == 0 ? '免费' : val.nomember_fee + '元/组'  ) + '</p>';
+				}else{
+					_html += '<p class="dos"><span class="vip">会员:'+ ( val.member_fee == 0 ? '免费' : val.member_fee + '元/人'  ) +'</span>';
+					_html += '非会员:'+ ( val.nomember_fee == 0 ? '免费' : val.nomember_fee + '元/人'  ) + '</p>';
+				}
+				_html += '</div><div class="weui_cell_hd">';
+				_html += '<input data-project="' + val.event_project_id +'"  value="'+ val.id +'" name="radio" type="radio" id="'+index + st + i +'" class="weui_check"><i class="weui_icon_checked"></i>'
+				_html += '</div></label>';
+			});
+			_html += '</div>';
+		});
+		return _html;
+	}	
+	
+    $("#next").on('tap',function(){
+		event_project_id = $('input[type="radio"][name="radio"]:checked').data('project');
+		event_group_id = $('input[type="radio"][name="radio"]:checked').val();		
+        if(event_project_id == undefined && event_group_id == undefined){
+            a.tips("请选择组别")
+        }else{
+            window.location.href = 'notes.html?event_id=' + event_id + "&event_project_id=" + event_project_id + "&event_group_id=" + event_group_id;
+        }        
+    });
+	
+	
+	//禁用微信分享
+	var href = window.location.href;
+	var url = href.split('#')[0];
+	$.ajax({
+		type: 'get',
+		url: a.apiUrl.wxSignURL,
+		data: {
+			appid:'wxcc5c198d146a1779', 
+			url:url
+		},
+		dataType: 'json',
+		success: function(data){				
+			//通过config接口注入权限验证配置
+			wx.config({
+				debug     : false, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
+				appId     : "wxcc5c198d146a1779", // 必填，公众号的唯一标识
+				timestamp : data.data.timestamp, // 必填，生成签名的时间戳
+				nonceStr  : data.data.noncestr, // 必填，生成签名的随机串
+				signature : data.data.signature,// 必填，签名，见附录1
+				jsApiList : ["onMenuShareTimeline", "onMenuShareAppMessage", "onMenuShareQQ", "onMenuShareWeibo"] // 必填，需要使用的JS接口列表，所有JS接口列表见附录2
+			});
+			
+			wx.ready(function(){		
+				wx.hideOptionMenu();
+			});
+		}
+	});
+	
+})
+</script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>赛事活动</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1, maximum-scale=1, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="活力圈"/>
+<meta name="format-detection" content="telephone=no"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+<meta name="distribution" content="global" />
+<meta name="author" content="活力圈" />
+<meta name="webcrawlers" content="all" />
+<link href="../dist/img/ico16.ico" rel="shortcut icon">
+<link href="../dist/img/icon_152.png" sizes=152x152 rel="apple-touch-icon">
+<link rel="stylesheet" type="text/css" href="../dist/css/hlq.min.css">
+<script type="text/javascript" src="../dist/js/seajs/2.1.1/sea.js"></script>
+<script type="text/javascript" src="../dist/js/sea_config.js"></script>
+<style type="text/css">
+#provinceList{margin-top:35px;}
+#provinceList li{padding: 5px 10px; border-bottom: 1px solid #ececec;}
+.current{border-bottom: 1px solid #ececec; padding: 5px 10px; position: fixed; top: 45px; width: 100%; color: #999; background-color: #fff;}
+</style>
+</head>
+<body>
+<header class="header">
+	<div class="bnt-back" onclick="history.back()"><i class="icon-back"></i></div>
+	<h1>选择地区</h1>
+</header>
+<div class="main">
+	<div class="current">当前选择：<span id="cityName"></span></div>
+	<ul id="provinceList">
+	</ul>
+</div>
+<div id="back_top"></div>
+<script type="text/javascript">
+//加载一个模块，在加载完成时，执行回调
+seajs.use(['util','address'], function(a,b){	
+	"use extend" 
+	b.getProvince();
+	$("#cityName").text(a.getItem('city_name'));
+	//点击选择
+	$("#provinceList").on('click','li',function(){
+ 		var i = 0;
+ 		var province_txt = $(this).text();
+ 		var province_id = ($(this).data('id') +'').substring(0,2);
+ 		var city = '<li class="selectCity" data-city="'+ province_txt +'" data-id="' + $(this).data('id') +'">全' + province_txt.substr(province_txt.length-1,1) + '</li>';		
+ 		for(i in city_data){
+ 			var city_id = i.substring(0,2);
+ 			if(province_id == city_id ){
+ 				city += '<li class="selectCity" data-city="'+ city_data[i].name +'" data-id=' + i + '>' + city_data[i].name + '</li>';
+ 			}
+ 		}
+ 		$("#provinceList").empty();
+ 		$("#provinceList").append(city);
+ 	});
+
+	$("#provinceList").on('click', '.selectCity' ,function(){
+		var city =  $(this).data('city');
+		var city_id =  $(this).data('id');
+		$("#cityName").text(city);
+		a.setItem('city_name',city);
+		a.setItem("city_id", city_id);
+		window.location.href = "index.html?city_id=" + city_id
+	});
+
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>参赛者信息</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1, maximum-scale=1, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="format-detection" content="telephone=no"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+<meta name="distribution" content="global" />
+<meta name="author" content="活力圈" />
+<meta name="webcrawlers" content="all" />
+<link rel="stylesheet" type="text/css" href="../../dist/css/hlq.min.css">
+<script src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+<script type="text/javascript" src="../../dist/js/seajs/2.1.1/sea.js"></script>
+<script type="text/javascript" src="../../dist/js/sea_config.js"></script>
+<style>
+.weui_cells_title{background: #e2e2e2;color: #666; font-size: 12px; padding: 5px 10px;}
+</style>
+</head>
+<body>
+<header class="header">
+    <div class="bnt-back" onclick="history.back()"><i class="icon-back"></i></div>
+    <h1>参赛者信息</h1>
+</header>
+<footer class="footer">
+    <div class="weui_btn weui_btn_warn" id="signUp">确认报名</div>
+</footer>
+<div class="main"> 
+	<div id="team"></div>
+	<div id="tempList">
+	
+	</div>
+</div>
+<script type="text/javascript">
+seajs.use(['util','idcard','base64'], function(a){
+
+    var event_id = a.getURLVar('event_id'),
+		project_id = a.getURLVar('event_project_id'),
+		group_id = a.getURLVar('event_group_id'),
+		key = [],
+		isTeam = false;
+	console.log(project_id);
+	console.log(group_id);
+    $.ajax({        
+        url: a.apiUrl.getEnrollInfoURL,
+        type: 'get',
+        data: {
+            session:a.getItem("session"),
+            uid:a.getItem("uid"),
+            event_id:event_id
+        },
+        dataType: 'json',
+		async: false,
+        beforeSend : function(){
+            a.tips("加载中...",1);
+        },
+        success: function(data){
+            $('.tips').hide();       
+            $.each(data.data.project,function(index, item){
+				if(project_id == item.id){					
+					$.each(item.group,function(i,val){										
+						if(group_id == val.id){	
+							var template = JSON.parse(val.enroll_template);								
+							if(val.single_person == 0){
+								isTeam = true;
+								var min = parseInt(val.person_min);
+								var max = parseInt(val.person_max);
+								console.log(min)
+								var _html ="";
+								_html += '<div class="weui_cell"><div class="weui_cell_hd"><label class="weui_label">队伍队名称</label></div><div class="weui_cell_bd weui_cell_primary"><input name="team_name" type="text" placeholder="请输入队伍队名称" class="weui_input"></div></div>';
+								_html += '<div class="weui_cell weui_cell_select weui_select_after"><div class="weui_cell_hd"><label class="weui_label" for="">队伍人数</label></div><div class="weui_cell_bd weui_cell_primary">'+ setOpaction(min,max) +'</div></div>';
+
+								setTemplate(min,template);
+
+								$('body').on('change','#select',function(){
+									var item = document.getElementById('select');
+									var index = item.selectedIndex;
+									var val = item.options[index].value || item.options[0].value;
+									setTemplate(val,template);	
+								});						
+								$('#team').append(_html);
+
+							}else{	
+								//单人组						
+								var min = 1;								
+								setTemplate(min,template);
+							}	
+						}
+					})
+				};
+            });
+         
+			
+			
+        },
+        error: function(res) {
+            a.tips("网络有点卡");
+        }
+    });	
+
+	function setOpaction(min,max){
+		var i, s="";
+		s = '<select class="weui_select" id="select">';
+		for(i= min; i <= max; i++){
+			s += '<option value="'+ i +'">'+ i +'</option>';
+		}
+		s += '</select>';
+		return s;
+	}
+	
+	function setTemplate(num,item){
+		var template="";
+		$('#tempList').empty();
+		for(var i=1; i <= num; i++){
+			template += '<div class="weui_cells_title">参赛者'+ i +'</div><div class="weui_cells weui_cells_form">';
+			$.each(item,function(i,val){
+				key.push(val.key)
+				if(val.key == 'sex'){
+					template += '<div class="weui_cell weui_cell_select weui_select_after"><div class="weui_cell_hd"><label class="weui_label" for="">'+ val.name +'</label></div><div class="weui_cell_bd weui_cell_primary"><select name="'+ val.key +'" class="weui_select"><option value="男">男</option><option value="女">女</option></select></div></div>';
+						
+				}else if(val.key == 'phone'){
+					template += '<div class="weui_cell"><div class="weui_cell_hd"><label class="weui_label">'+ val.name +'</label></div><div class="weui_cell_bd weui_cell_primary"><input name="'+ val.key +'" type="number" placeholder="请输入'+ val.name +'" class="weui_input"></div></div>';
+				}else{
+					template += '<div class="weui_cell"><div class="weui_cell_hd"><label class="weui_label">'+ val.name +'</label></div><div class="weui_cell_bd weui_cell_primary"><input name="'+ val.key +'" type="text" field="'+ val.name +'" placeholder="请输入'+ val.name +'" class="weui_input"></div></div>';
+				}
+			})
+			template += '</div>';
+		}
+		$('#tempList').append(template);
+	};
+	
+	
+	
+    
+    var team_name = "";
+    $('#signUp').on('tap',function(){
+        var len = $(".weui_cells_form").length,           
+            data = [],
+			dataAfter = []
+            base64 =""
+            truename = "",
+            idcard = "",
+            phone ="",
+            sex = "";			
+			
+		team_name = a.toUnicode($("input[name='team_name']").val());
+		if(team_name == ""){
+			a.tips("请填队伍名称");
+			return false;
+		};
+		var merge ={};
+        for(var i=0; i < len; i++){
+			var enroll_params = {};
+			for(var j=0; j < key.length; j++){				
+				var k = key[j];
+				var val = $("input[name='"+ key[j] +"']").eq(i).val();
+				var field = $("input[name='"+ key[j] +"']").eq(i).attr('field');
+				
+				if($("input[name='truename']").length > 0){
+					truename = $("input[name='truename']").eq(i).val();
+					if(truename == ""){
+						a.tips("请填写参赛者"+ (i+1) +"姓名");
+						$("input[name='truename']").focus();
+						return false;
+					}
+				};
+
+				if($("input[name='idcard']").length > 0){
+					idcard = $("input[name='idcard']").eq(i).val();
+					if(idcard == ""){
+						a.tips("请填参赛者"+ (i+1) +"身份证");
+						$("input[name='idcard']").focus();
+						return false;
+					}else if(!checkCard(idcard)){
+						a.tips("参赛者"+ (i+1) +"身份证号码不正确");
+						$("input[name='idcard']").val("").focus();
+						return false;
+					}
+				};
+
+				if($("input[name='phone']").length > 0){
+					phone = $("input[name='phone']").eq(i).val();
+					if(phone == ""){
+						a.tips("请填参赛者"+ (i+1) +"联系电话");
+						$("input[name='phone']").focus();
+						return false;
+					}else if(!a.isPhone(phone)){
+						a.tips("请填参赛者"+ (i+1) +"电话号码不正确");
+						$("input[name='phone']").val("").focus();
+						return false;
+					}
+				};
+			   
+				if($("select[name='sex']").length > 0){
+				   sex = $("select").eq(i).val(); 
+				};
+				
+				if(val == ""){
+					a.tips("请填参赛者"+ (i+1) +"的" + field);
+					return false;
+				}
+				
+				enroll_params[k] = a.toUnicode(val);
+			}			
+			dataAfter.push(enroll_params);
+        };
+
+		merge.project_id = parseInt(project_id,10);
+		merge.group_id = parseInt(group_id,10);
+		if(isTeam){merge.team_name = team_name;}
+		merge.enroll_params = dataAfter;
+		data.push(merge);
+		
+        //console.log(data);
+        //console.log(JSON.stringify(data));
+		var jsonDate = eval("'" + JSON.stringify(data) + "'");
+        base64 = BASE64.encoder(jsonDate);
+        //console.log("编码后" + base64);
+		var enroll = []
+        $.ajax({
+            type: 'POST',
+            url: a.apiUrl.eventEnrollURL,   //上线这个地址要修改, base文件有增加一个 toUnicode
+            data: {
+                event_id : event_id,
+                entrance_type: 'a',
+                entrance_community_cid : 0,
+                session:a.getItem('session'), 
+                event_enroll_data: base64
+            },
+            dataType: 'json',
+            beforeSend : function(){
+                a.tips("加载中...",1);
+            },
+            success: function(data){
+				console.log(data);
+				$('.tips-message').hide();
+				if(data.ret == 0){	
+					var event_enroll_id = data.data[0].event_enroll_id;
+					if(data.data[0].amount == 0){
+						window.location.href = 'pay_info.html?event_enroll_id=' + event_enroll_id + "&event_id=" + event_id + "&project_id=" + project_id +'&group_id=' +group_id + '&guide=1';
+					}else{
+						window.location.href = 'pay_confirm.html?event_enroll_id=' + event_enroll_id + "&event_id=" + event_id + "&project_id=" + project_id +'&group_id=' +group_id
+					};					
+				}
+				if(data.ret == 6161){
+                    a.tips("队伍队名己存在");
+					$("input[name='team_name']").val("").focus();
+                    return false; 
+                }
+            },
+            error: function(xhr) {
+				console.log(xhr)
+            }
+        });
+
+    });
+	
+	
+	//禁用微信分享
+	var href = window.location.href;
+	var url = href.split('#')[0];
+	$.ajax({
+		type: 'get',
+		url: a.apiUrl.wxSignURL,
+		data: {
+			appid:'wxcc5c198d146a1779', 
+			url:url
+		},
+		dataType: 'json',
+		success: function(data){
+			wx.config({
+				debug     : false, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
+				appId     : "wxcc5c198d146a1779", // 必填，公众号的唯一标识
+				timestamp : data.data.timestamp, // 必填，生成签名的时间戳
+				nonceStr  : data.data.noncestr, // 必填，生成签名的随机串
+				signature : data.data.signature,// 必填，签名，见附录1
+				jsApiList : ["onMenuShareTimeline", "onMenuShareAppMessage", "onMenuShareQQ", "onMenuShareWeibo"] // 必填，需要使用的JS接口列表，所有JS接口列表见附录2
+			});
+			wx.ready(function(){		
+				wx.hideOptionMenu();
+			});
+		}
+	});
+	
+});
+</script>
+</body>
+</html>

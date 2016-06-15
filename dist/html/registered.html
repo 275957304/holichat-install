@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>活力圈</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1, maximum-scale=1, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="format-detection" content="telephone=no"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+<meta name="distribution" content="global" />
+<link href="../img/ico16.ico" rel="shortcut icon">
+<link href="../img/icon_152.png" sizes=152x152 rel="apple-touch-icon">
+<meta name="author" content="活力圈" />
+<meta name="webcrawlers" content="all" />
+<link rel="stylesheet" type="text/css" href="../css/weui.min.css">
+<script type="text/javascript" src="../js/zepto.min.js"></script>
+<script type="text/javascript" src="../js/Base64.js"></script>
+<script type="text/javascript" src="../js/category.js"></script>
+<style>
+html,body{height:100%;}
+body{background: #f5f5f5;position:relative;overflow:hidden;}
+.header,.footer{position: fixed;width: 100%;right:0;z-index: 10;left: 0;}
+.footer{bottom:0;}
+.header{top:0;height:45px;line-height: 45px;color: #fff;background-color:#da2a2a;}
+.header h1{text-align: center;font-size: 18px;font-weight: normal;}
+.container{padding:45px 0;}
+.weui_btn:after,.weui_btn{border-radius:0;}
+.weui_msg{padding-top:15px;}
+.weui_msg .weui_icon_area{margin-bottom:5px;}
+.weui_icon_msg:before{font-size:60px;}
+.list{margin-top:10px;width: 100%; display:-moz-box;display:-webkit-box;display:box;box-sizing: border-box; border-top:1px solid #eee; padding-top:10px;}
+.list_item{-moz-box-flex:1;-webkit-box-flex:1;box-flex:1;}
+.list_item img{width:85px; margin:0 auto;}
+
+#shade{display: none;}
+#shadeBg{ position: fixed;  top: 0%;  left: 0%;  width: 100%;  height: 100%;  background-color: black;  z-index:1001;  -moz-opacity: 0.7;  opacity:.70;  filter: alpha(opacity=70);}
+#shadeImg{ position: absolute;  top: 0%;  left: 0%; width: 100%; z-index:1002;}
+#text1{ color: red;}
+</style>	
+</head>
+<body>
+<header class="header">
+    <h1>活力圈</h1>
+</header>
+<div class="container">
+	<div class="weui_msg">
+		<div class="weui_icon_area"><img src="../img/official_accounts.jpg" width="120" height="120" alt="活力圈"></div>
+		<div class="weui_text_area">
+			<h2 style="color:#04be02;font-weight:bold;" class="weui_msg_title">恭喜你注册成功</h2>
+			<p class="weui_msg_desc">长按二维码关注活力圈公众号</p>
+		</div>
+		<div class="weui_opr_area">
+			<p class="weui_btn_area">
+				<a href="javascript:;" id="downApp" class="weui_btn weui_btn_primary">点击下载APP</a>
+			</p>
+		</div>
+		<p>下载登录活力圈APP</p>
+		<b style="color:red">百万豪礼月月送！</b>
+		<div class="list">
+			<div class="list_item">
+				<img src="../img/iphone_se.jpg" width="85" alt="iPhone SE">
+				<p>iPhone SE</p>
+			</div>
+			<div class="list_item">
+				<img src="../img/apple_watch.jpg" width="85" alt="Apple Watch">
+				<p>Apple Watch</p>
+			</div>
+			<div class="list_item">
+				<img src="../img/wristband.jpg" width="85" alt="小米手环">
+				<p>小米手环</p>
+			</div>
+		</div>
+	</div>
+</div>
+<div onTouchend="hidediv()" id="shade">
+	<div id="shadeBg"></div>
+	<img id="shadeImg" src="../img/browserTips.png"  />
+</div>
+<script type="text/javascript">
+function getUrlParam(name) {
+	var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+	var r = window.location.search.substr(1).match(reg);
+	if (r != null) return unescape(r[2]); return null;
+}
+var baseURL = "http://app.holichat.com/"
+var last_page = getUrlParam('last_page');
+var community_cid = getUrlParam('community_cid');
+var event_id = getUrlParam('event_id');
+$('#downApp').on('click',function(){
+	window.location.href = "http://a.app.qq.com/o/simple.jsp?pkgname=com.holichat.client";
+})
+function hidediv(){
+	document.getElementById("shade").style.display ='none';
+}
+function isWx(){
+	return "micromessenger" == navigator.userAgent.toLowerCase().match(/MicroMessenger/i)
+}
+window.onload = function() {
+	if (isWx){			
+		var code = getUrlParam('code');			
+		if (code){  //获取微信code
+		
+			$.get(baseURL + 'login/sdk/wx_access_token',{'appid':'wxcc5c198d146a1779', "code":code, 'grant_type':'authorization_code'},function(data){   //获取微信令牌
+				var access_token = data.data.access_token,
+					openid = data.data.openid;	
+				var params = {
+					"access_token" : access_token,
+					"open_id" : openid,
+				}				
+				var base64 = BASE64.encoder(JSON.stringify(params));				
+				$.ajax({        
+					url: baseURL + 'login/sdk/other_login',
+					type: 'post',
+					async:false, //同步请求
+					data: {
+						type: 'weixin', 
+						platform : 'weixin',
+						channel:5000,
+						params: base64
+					},
+					dataType: 'json',
+					success: function(data){
+						console.log(data);
+						if(data.ret == 0){				
+							
+							if (data["data"] && data["data"]["session"]){   //第三方登录成功返回了数据
+							
+								if (community_cid && community_cid != ""){
+								
+									//用户绑定社团
+									$.get(baseURL + "user/api/invite_code?",{"community_cid" : community_cid, "session" : data["data"]["session"]},function(response){
+										console.log(response);
+										if(response.ret == 0 ){
+											alert("成功绑定社团")
+										}else if(response.ret == 6541){
+											alert("已绑定社团")
+										}else{
+											alert("绑定社团失败！" + response["ret"])
+										}
+									},'json');	
+									
+									
+								}else if (event_id && event_id != ""){		
+									//赛事简介信息
+									$.get(baseURL + "event/view/get_brief?",{"event_id" : event_id},function(briefJson){
+										console.log(briefJson);
+										if (briefJson["ret"] == 0){	
+										
+											//用户绑定社团
+											$.get(baseURL + "user/api/invite_code?",{"community_cid" : briefJson["data"]["community_cid"],"session" : data["data"]["session"]},function(response){
+												if(response.ret == 0 ){
+													alert("成功绑定社团")
+												}else if(response.ret == 6541){
+													alert("已绑定社团")
+												}else{
+													alert("绑定社团失败！" + response["ret"])
+												}
+											},'json');
+								
+											
+										}else {
+											alert("获取简介信息失败")
+										}	
+									},'json');
+									
+									
+								}else{
+									alert("获取社团信息失败！")
+								}	
+								
+							}
+
+						}else{
+							alert("注册失败！")
+						}	
+					},
+					error: function(res) {
+						alert(res);
+					}
+				})
+			},'json')
+			
+		}
+		return;
+	}
+	window.location.href = "http://www.holichat.com/down";
+}
+</script>
+</body>
+</html>

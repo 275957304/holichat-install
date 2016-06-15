@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>我的赛事活动</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1, maximum-scale=1, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="format-detection" content="telephone=no"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+<meta name="distribution" content="global" />
+<meta name="author" content="活力圈" />
+<meta name="webcrawlers" content="all" />
+<link rel="stylesheet" type="text/css" href="../dist/css/hlq.min.css">
+<script type="text/javascript" src="../dist/js/seajs/2.1.1/sea.js"></script>
+<script type="text/javascript" src="../dist/js/sea_config.js"></script>
+</head>
+<style>
+	#list .list{position:relative;}
+	#list .list .weui_media_bd a{display:block; position:absolute; left:0; right:0; bottom:0; top:0; z-index:9; width:100%;}
+	.list .weui_media_bd .weui_btn{right: 10px; bottom: 15px;}
+</style>
+<body>
+<header class="header">
+    <a href="index.html" class="bnt-back"><i class="icon-back"></i></a>
+    <h1>我的赛事活动</h1>
+</header>
+<div class="main"> 
+	<input type="hidden" id="page_size" value="10">
+	<input type="hidden" id="page" value="1"> 
+
+	<div class="weui_panel m0">
+		<div id="list" class="weui_panel_bd">
+			
+		</div>
+	</div>
+ 
+</div>
+<div id="back_top"></div>
+<script type="text/javascript">
+seajs.use(['util','dropload'], function(a,b){
+
+	var page_size = $("#page_size").val();
+	var page = $("#page").val();
+	
+	$('.main').dropload({
+		scrollArea : window,
+		loadDownFn : function(me){
+			$.ajax({
+				type: 'GET',
+				async: false,
+				url: a.apiUrl.userEventURL,
+				data: {
+					session: a.getItem('session'),
+					page_size:page_size,
+					page:page
+				},
+				dataType: 'json',
+				success: function(data){
+					console.log(data);
+					page++;
+					response = data.data.list;
+					var _html = '';
+					if(data.data.list.length < 1){
+						me.lock();
+						// 无数据
+						me.noData();
+					}
+					for(var i = 0; i < response.length; i++){
+						var getCurrentStatus = a.getCurrentStatus( response[i].signline, response[i].deadline, response[i].begin_date, response[i].end_date);
+						var projectGroup = getGroup(response[i].event_project_id,response[i].event_group_id);	
+						var getProjectGroup = JSON.parse(projectGroup);
+						var currentStatus = getCurrentStatus.replace(/<[^>]+>/g,"");
+						_html +='<div id="'+ response[i].event_enroll_id +'" class="weui_media_box weui_media_appmsg list">' + 
+								'<div class="weui_media_hd pr"><img alt="" src="' + a.apiUrl.imgURL + response[i].logo_image + '" class="weui_media_appmsg_thumb"><p class="state">'+ getCurrentStatus +'</p></div>'+
+								'<div class="weui_media_bd">' +	pay_status(currentStatus, response[i].pay_status, response[i].event_enroll_id, response[i].event_id, response[i].event_project_id, response[i].event_group_id) + 
+								'<h4 class="title">'+ response[i].title +'</h4>' +                               
+								'<p class="weui_media_desc group">项目：'+ getProjectGroup.data.group +'</p><p class="weui_media_desc group">组别：'+ getProjectGroup.data.project +'</p></div></div>';
+					}
+					$('#list').append(_html);
+					  //每次数据加载完，必须重置
+					me.resetload();
+				},
+				error: function(xhr, type){                    
+					H.tips("网络有点卡");
+					if(intswitch){
+					me.resetload();
+					intswitch = false;
+					};
+				}
+			});
+		}
+	}); 
+
+
+	function getGroup(project,group){
+		var result;
+		$.ajax({
+			url: a.apiUrl.eventProGroupInfoURL,
+			async: false,//改为同步方式
+			type: "GET",
+			data: {event_project_id : project,event_group_id : group},
+			success: function (data) {
+				result = data;
+			}
+		});
+		return result;
+	};
+ 
+	function pay_status(currentStatus,status,enroll_id, event_id, project_id, group_id){
+		if(status == 'S'){		
+			if(currentStatus == '已结束'){
+				return '<a href="detail/index.html?event_id='+ event_id +'"><span class="weui_btn weui_btn_mini weui_btn_default">已结束</span></a>'
+			}else{
+				return '<a href="detail/pay_info.html?event_enroll_id='+ enroll_id +'&event_id='+ event_id +'&project_id='+ project_id +'&group_id='+ group_id +'"><span class="weui_btn weui_btn_mini weui_btn_default">已支付</span></a>'
+			}
+
+		}else if(status == 'C'){		
+			if(currentStatus == '预热中' || currentStatus == '报名中'){
+				return '<a href="detail/pay_info.html?event_enroll_id='+ enroll_id +'&event_id='+ event_id +'&project_id='+ project_id +'&group_id='+ group_id +'"><span class="weui_btn weui_btn_mini weui_btn_warn">确认支付</span></a>'	
+			}else{
+				return '<a href="detail/index.html?event_id='+ event_id +'"><span class="weui_btn weui_btn_mini weui_btn_default">报名截止</span></a>'
+			}
+			
+		}else if(status == 'N'){
+			if(currentStatus == '报名中' || currentStatus == '预热中'){
+				return '<a href="detail/pay_confirm.html?event_enroll_id='+ enroll_id +'"><span class="weui_btn weui_btn_mini weui_btn_warn">未支付</span></a>'	
+			}else{
+				return '<a href="detail/index.html?event_id='+ event_id +'"><span class="weui_btn weui_btn_mini weui_btn_default">报名截止</span></a>'
+			}			
+		}else{
+			return;
+		}
+	};
+		
+	
+	//禁用微信分享
+	var href = window.location.href;
+	var url = href.split('#')[0];
+	$.ajax({
+		type: 'get',
+		url: a.apiUrl.wxSignURL,
+		data: {
+			appid:'wxcc5c198d146a1779', 
+			url:url
+		},
+		dataType: 'json',
+		success: function(data){
+			console.log(data);
+			wx.config({
+				debug     : false,
+				appId     : "wxcc5c198d146a1779",
+				timestamp : data.data.timestamp,
+				nonceStr  : data.data.noncestr,
+				signature : data.data.signature,
+				jsApiList : ["onMenuShareTimeline", "onMenuShareAppMessage", "onMenuShareQQ", "onMenuShareWeibo"] 
+			});
+			
+			wx.ready(function(){		
+				wx.hideOptionMenu();
+			});
+		}
+	});
+	
+
+
+});
+</script>
+</body>
+</html>

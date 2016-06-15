@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>活力圈</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1, maximum-scale=1, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="format-detection" content="telephone=no"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+<meta name="distribution" content="global" />
+<link href="../dist/img/ico16.ico" rel="shortcut icon">
+<link href="../dist/img/icon_152.png" sizes=152x152 rel="apple-touch-icon">
+<meta name="author" content="活力圈" />
+<meta name="webcrawlers" content="all" />
+<link rel="stylesheet" type="text/css" href="../dist/css/weui.min.css">
+<script type="text/javascript" src="../dist/js/zepto.min.js"></script>
+<script type="text/javascript" src="../dist/js/Base64.js"></script>
+<script type="text/javascript" src="../dist/js/category.js"></script>
+<style>
+html,body{height:100%;}
+body{background: #f5f5f5;position:relative;overflow-x: hidden;}
+.header,.footer{position: fixed;width: 100%;right:0;z-index: 10;left: 0;}
+.footer{bottom:0;}
+.header{top:0;height:45px;line-height: 45px;color: #fff;background-color:#da2a2a;}
+.header h1{text-align: center;font-size: 18px;font-weight: normal;}
+.container{padding:45px 0;}
+.weui_btn:after,.weui_btn{border-radius:0;}
+#result{color: #999; font-size: 13px; line-height: 1.4;}
+#result img{display:block; max-width:100%;}
+</style>	
+</head>
+<body>
+<header class="header">
+    <h1>活力圈</h1>
+</header>
+<div class="container">
+	<div class="weui_panel_bd">
+		<a href="javascript:void(0);" class="weui_media_box weui_media_appmsg">
+			<div class="weui_media_hd">
+				<img class="weui_media_appmsg_thumb" src="../dist/img/logo.png" id="icon" alt="活力圈">
+			</div>
+			<div class="weui_media_bd">
+				<h4 id="title" class="weui_media_title"></h4>
+				<p id="community_name" class="weui_media_desc"></p>
+				<p id="address" class="weui_media_desc"></p>
+			</div>
+		</a>
+	</div>
+	
+	<div class="weui_media_box weui_media_text">
+		<h4 class="weui_media_title">简介</h4>
+		<p id="result"></p>
+	</div>
+</div>
+<div class="footer">
+	<a href="javascript:;" onclick="wechatFunction()" class="weui_btn weui_btn_primary">点击登录</a>
+</div>
+<script type="text/javascript">
+function getUrlParam(name) {
+	var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+	var r = window.location.search.substr(1).match(reg);
+	if (r != null) return unescape(r[2]); return null;
+}
+var urlHead = "http://app.holichat.com/"
+var event_id = getUrlParam('event_id');
+function wechatFunction(){			
+	var url = "https://open.weixin.qq.com/connect/oauth2/authorize?";
+	var appid = "appid=" + "wxcc5c198d146a1779";
+	var reURI = "&redirect_uri=" + encodeURIComponent("http://m.holichat.com/dist/html/registered.html" + "?last_page=club&community_cid=" + event_id) 
+	var reType = "&response_type=" + "code";
+	var scope = "&scope=" + "snsapi_userinfo";
+	url = url + appid + reURI + reType + scope + "#wechat_redirect";
+	window.location.href= url;
+}
+
+$.ajax({
+	type: 'get',
+	url: urlHead + "event/view/get_brief?",
+	data:{'event_id':event_id},
+	dataType: 'json',
+	success: function(json){
+	
+		var about = json['data']['about']
+		var address = json['data']['address']
+		var amap_coor = json['data']['amap_coor']
+		var begin_date = json['data']['begin_date']
+		var co_organizer = json['data']['co_organizer']
+		var community_cid = json['data']['community_cid']
+		var community_name = json['data']['community_name']
+		var contact_tel = json['data']['contact_tel']
+		var content = json['data']['content']
+		var deadline = json['data']['deadline']
+		var end_date = json['data']['end_date']
+		var logo_image = json['data']['logo_image']
+		var organizer = json['data']['organizer']
+		var signline = json['data']['signline']
+		var sponsor = json['data']['sponsor']
+		var status = json['data']['status']
+		var title = json['data']['title']
+		var type = json['data']['type']
+		document.getElementById("icon").src= "http://img.holichat.com/uploads/" + logo_image
+		document.getElementById("title").innerHTML= title
+		document.getElementById("community_name").innerHTML= community_name
+		document.getElementById("address").innerHTML= address
+		document.getElementById("result").innerHTML= content
+		
+	},
+	error: function(res) {
+		alert(res);
+	}
+});
+
+</script>
+</body>
+</html>

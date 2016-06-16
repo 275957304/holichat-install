@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>资讯</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1, maximum-scale=1, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="format-detection" content="telephone=no"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+<meta name="distribution" content="global" />
+<meta name="author" content="活力圈" />
+<meta name="webcrawlers" content="all" />
+<link rel="stylesheet" type="text/css" href="../../dist/css/hlq.min.css">
+<script type="text/javascript" src="../../dist/js/seajs/2.1.1/sea.js"></script>
+<script type="text/javascript" src="../../dist/js/sea_config.js"></script>
+<style type="text/css">
+.article-top{border-bottom:1px solid #d1d1d1; padding:10px;}
+.article-top .title{font-size:16px; color:#040404; text-align: justify;}
+.article-top .article-desc{margin-top:5px; font-size:14px; color:#7e7e7e;}
+.article-top .article-desc a{margin-left:15px; color:#55769f;}
+</style>
+</head>
+<body class="b-white">
+<header class="header">
+    <div class="bnt-back" onclick="history.back()"><i class="icon-back"></i></div>
+    <h1>资讯</h1>
+</header>
+<div class="main">
+	<div class="article-top">
+		<h2 class="title"></h2>
+		<p class="article-desc"><span id="time">2016-06-15</span><a href="#">活力圈</a></p>
+	</div>
+	<div id="main" class="article">	
+	</div>	
+</div>
+<script type="text/javascript">
+seajs.use(['util'], function(a){
+	var get_id = a.getURLVar('id');	
+    $.ajax({
+        type: 'get',
+        //url: a.apiUrl.newsPfInfoURL,
+        url: 'http://192.168.1.205/holichat_server/index.php/news/pf/info',
+        data:{id:get_id},
+        dataType: 'json',
+        beforeSend : function(){
+            a.tips("加载中...",1);
+        },
+        success: function(data) {
+			console.log(data);
+			$('.title').text(data.data.title);
+			$('#time').text(data.data.create_time);
+			$('#main').text(data.data.content);
+        },
+        error: function(xhr, type) {
+            a.tips("网络错误");
+        }
+    });
+
+})
+    
+</script>
+</body>
+</html>

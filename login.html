@@ -33,6 +33,7 @@ function setItem(a,b){
 		document.cookie="hlq_"+a+"="+escape(b)+";expires="+c.toGMTString()
 	}
 }
+
 function isWeixin(){
 	return "micromessenger" == navigator.userAgent.toLowerCase().match(/MicroMessenger/i)
 }
@@ -42,9 +43,12 @@ window.onload = function(){
 		var source = getURLVar('source');
 		var event_id = getURLVar('event_id');
 		if(code){
+		
 			//获取微信接口
+			
 			var href = window.location.href;
 			var url = href.split('#')[0];
+			// long 这里要判断是否在locatStorage是否以有存在 city_id
 			$.ajax({
 				type: 'get',
 				url: "http://app.holichat.com/other/api/wx_js_sign",
@@ -69,7 +73,7 @@ window.onload = function(){
 					wx.ready(function(){			
 						wx.getLocation({
 							type: 'wgs84', // 默认为wgs84的gps坐标，如果要返回直接给openLocation用的火星坐标，可传入'gcj02'
-							success: function (res) {
+							success: function (res) {							
 								setItem("latitude", res.latitude);
 								setItem("longitude", res.longitude);
 								var locations = [res.longitude,res.latitude].join();
@@ -85,12 +89,14 @@ window.onload = function(){
 										setItem("city_id", city);
 										setItem("city_name", cityName);						
 									}			
-								});
+								});	
 							}
 						});
 					});
 				}
-			});			
+			});		
+
+			
 			
 			$.get(baseURL + 'login/sdk/wx_access_token',{'appid':'wxcc5c198d146a1779', "code":code, 'grant_type':'authorization_code'},function(data){
 				console.log(data);

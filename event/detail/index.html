@@ -98,10 +98,12 @@ seajs.use(['util','login','tab','address'], function(a,b,c,d){
 								'<p class="weui_media_desc"><span class="about-follow">' + data.data.attention_num + '</span> <span class="text-danger">¥' + data.data.cost + ' 元起</span></p>' +
 								'<p class="weui_media_desc">' + a.getCurrentStatus(data.data.signline,data.data.deadline,data.data.begin_date,data.data.end_date) + '</p>' +
 							'</div>' +
-						'</div></div> <div class="weui_panel weui_panel_access">';
+						'</div></div>'+
+						'<div class="weui_panel"> <div class="weui_article p10"><h4 class="weui_media_title about-icon">简介</h4><div class="weui_media_desc"> ' + a.textEnter(data.data.about) + ' </div></div></div>' +
+						'<div class="weui_panel weui_panel_access">';
 				
                     if(info){
-						_html +=  '<div class="weui_media_box weui_media_text p10"><h4 class="weui_media_title">组织方</h4>';
+						_html +=  '<div class="weui_media_box weui_media_text p10"><h4 class="weui_media_title host-icon">组织方</h4>';
 						if(info.organizer){
 							_html +=  '<p class="weui_media_desc">主办单位： ' + info.organizer + '</p>';
 						}						
@@ -120,7 +122,7 @@ seajs.use(['util','login','tab','address'], function(a,b,c,d){
                     };
 					
                     if(data.data.begin_date){
-                        _html += '<div class="weui_media_box weui_media_text p10"><h4 class="weui_media_title">时间</h4> <p class="weui_media_desc">报名时间：' + data.data.signline + ' -- ' + data.data.deadline + '</p>';
+                        _html += '<div class="weui_media_box weui_media_text p10"><h4 class="weui_media_title time-icon">时间</h4> <p class="weui_media_desc">报名时间：' + data.data.signline + ' -- ' + data.data.deadline + '</p>';
 						
 						if(data.data.begin_date){
 							_html +=  '<p class="weui_media_desc">比赛时间： ' + data.data.begin_date.substring(0,10) + ' -- ' + data.data.end_date.substring(0,10) + '</p>';
@@ -130,12 +132,12 @@ seajs.use(['util','login','tab','address'], function(a,b,c,d){
                     }
 					
 					if(data.data.address){
-                        _html += '<div id="map" data-map="'+ data.data.amap_coor +'" class="weui_media_box weui_media_text p10"><h4 class="weui_media_title">地点</h4> <p class="weui_media_desc">' + d.getAddress(data.data.region_id)  + data.data.address + '</p></div>';
+                        _html += '<div id="map" data-map="'+ data.data.amap_coor +'" class="weui_media_box weui_media_text p10"><h4 class="weui_media_title site-icon">地点</h4> <p class="weui_media_desc">' + d.getAddress(data.data.region_id)  + data.data.address + '</p></div>';
                     }					
 
 					
                     if(info){
-                        _html += '<div class="weui_media_box weui_media_text p10"><h4 class="weui_media_title">咨询</h4>';						
+                        _html += '<div class="weui_media_box weui_media_text p10"><h4 class="weui_media_title advisory-icon">咨询</h4>';						
 						if(info.contact_name){
 							_html +=  '<p class="weui_media_desc">联系人： ' + info.contact_name + '</p>';
 						}
@@ -155,7 +157,7 @@ seajs.use(['util','login','tab','address'], function(a,b,c,d){
 						_html += '</div>';
 					}
                     
-                    _html +='</div><div class="weui_panel"> <div class="weui_article p10"><h4 class="weui_media_title">简介</h4><div class="weui_media_desc"> ' + a.textEnter(data.data.about) + ' </div></div></div>';   
+                    _html +='</div>';   
                 ;
                 $("#synopsis").append(_html);
 
@@ -222,7 +224,7 @@ seajs.use(['util','login','tab','address'], function(a,b,c,d){
 			}
 		});
 
-	window.location= holichat://reaction/?uid=1
+	 
 	
 	//微信分享
 	var href = window.location.href;

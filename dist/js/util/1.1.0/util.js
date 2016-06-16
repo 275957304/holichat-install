@@ -29,6 +29,7 @@ define(function(require, exports, module) {
         eventSignCheckURL : baseURL + 'event/interface/event_sign_check', //赛事入场验证检测
         eventTeamInfoURL : baseURL + 'event/team/event_team_info',
         wxSubscribeURL : baseURL + 'other/api/wx_subscribe', //微信订阅检查
+        newsPfInfoURL : baseURL + 'news/pf/info', //活力圈资讯内容
     }
 
     /**
@@ -207,42 +208,73 @@ define(function(require, exports, module) {
         })  
     }) 
 
-    //判断用户是否有安装app
-    
+	
+	//解决输入框input获取焦点时，虚拟键盘会把fixed元素顶上去
+	$('input[name = text]').on('focus',function(){
+		$('.footer,.header').css('position','static');
+	}).on('blur',function(){
+		$('.footer,.header').css({'position':'fixed','bottom':'0'})
+	})
+
+
+
+    //提示用户安装app区 的关闭按钮  
     $('.prompt-close').on('click',function(){
         $(this).parents('.prompt-app').remove();
     })
 
 
 
-    
+    //检测系统是否安装app，如果安装就打开，没有安装就下载app
+    // function checkInstalled() {
+    //     if (/(iPhone|iPad|iPod|iOS)/i.test(navigator.userAgent)) {
+    //         window.location.href = "holichat://";
+    //         setTimeout(function () {
+    //             window.location.href = "http://www.holichat.com/down";
+    //         }, 500);
+    //     } else {
+    //         window.location.href = "http://www.holichat.com/down.apk";
+    //     }
+    // }
+	
+	
+	
+	
+    /*
 
-
-
-
-/*
-if (navigator.userAgent.match(/(iPhone|iPod|iPad);?/i)) {
-    var loadDateTime = new Date();
-    window.setTimeout(function() {
-        var timeOutDateTime = new Date();
-        if (timeOutDateTime - loadDateTime < 5000) {
-            window.location = "要跳转的页面URL";
+    //判断是否为安卓系统
+    function checkPlatform() {
+        if (/android/i.test(navigator.userAgent)) {
+            $("#down_app").show();
+            $(".downios").hide();
+        } else if (/(iPhone|iPad|iPod|iOS)/i.test(navigator.userAgent)) {
+            $("#down_app").show();
+            $(".downandroid").hide();
+        } else if (/Linux/i.test(navigator.userAgent)) {
+            $("#down_app").show();
+            $(".downios").hide();
+        } else if (/Linux/i.test(navigator.platform)) {
+            $("#down_app").show();
+            $(".downios").hide();
         } else {
-            window.close();
+            $("#down_app").hide();
+            $("#app_downli").hide();
+            $(".copyrg").css("margin-bottom", "0").css("padding-bottom", '20px');
         }
-    },25);
-    window.location = " apps custom url schemes ";
-} else if (navigator.userAgent.match(/android/i)) {
-var state = null;
-try {
-state = window.open("apps custom url schemes ", '_blank');
-} catch(e) {}
-if (state) {
-window.close();
-} else {
-window.location = "要跳转的页面URL";
-}
-}
+    }
+
+    //检测系统是否安装app，如果安装就打开，没有安装就下载app
+    function checkInstalled() {
+        if (/(iPhone|iPad|iPod|iOS)/i.test(navigator.userAgent)) {
+            window.location.href = "OnlinePharnaciesByKAD://";
+            setTimeout(function () {
+                window.location.href = "http://um0.cn/5o5ti/";
+            }, 500);
+        } else {
+            window.location.href = "http://res.360kad.com/app/k/kad-wp1.apk";
+        }
+    }
+    */
  
 
 

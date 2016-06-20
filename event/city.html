@@ -15,7 +15,7 @@
 <link href="../dist/img/ico16.ico" rel="shortcut icon">
 <link href="../dist/img/icon_152.png" sizes=152x152 rel="apple-touch-icon">
 <link rel="stylesheet" type="text/css" href="../dist/css/hlq.min.css">
-<script type="text/javascript" src="../dist/js/seajs/2.1.1/sea.js"></script>
+<script type="text/javascript" src="../dist/js/sea.js"></script>
 <script type="text/javascript" src="../dist/js/sea_config.js"></script>
 <style type="text/css">
 #provinceList{margin-top:35px;}
@@ -35,11 +35,11 @@
 </div>
 <div id="back_top"></div>
 <script type="text/javascript">
-//加载一个模块，在加载完成时，执行回调
-seajs.use(['util','address'], function(a,b){	
+var requireFun = ['zepto','base','address','jweixin'];
+seajs.use(requireFun, function(zepto,base,add){	
 	"use extend" 
-	b.getProvince();
-	$("#cityName").text(a.getItem('city_name'));
+	add.getProvince();
+	$("#cityName").text(base.getItem('city_name'));
 	//点击选择
 	$("#provinceList").on('click','li',function(){
  		var i = 0;
@@ -60,8 +60,8 @@ seajs.use(['util','address'], function(a,b){
 		var city =  $(this).data('city');
 		var city_id =  $(this).data('id');
 		$("#cityName").text(city);
-		a.setItem('city_name',city);
-		a.setItem("city_id", city_id);
+		base.setItem('city_name',city);
+		base.setItem("city_id", city_id);
 		window.location.href = "index.html?city_id=" + city_id
 	});
 

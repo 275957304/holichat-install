@@ -12,7 +12,7 @@
 <meta name="author" content="活力圈" />
 <meta name="webcrawlers" content="all" />
 <link rel="stylesheet" type="text/css" href="../../dist/css/hlq.min.css">
-<script type="text/javascript" src="../../dist/js/seajs/2.1.1/sea.js"></script>
+<script type="text/javascript" src="../../dist/js/sea.js"></script>
 <script type="text/javascript" src="../../dist/js/sea_config.js"></script>
 <style>
 .preview-list img{width: 100px;height:100px;}
@@ -51,187 +51,186 @@
 	</div>
 </div>
 <script type="text/javascript">
-seajs.use(['util','login','tab','address'], function(a,b,c,d){
-    var event_id = a.getURLVar('event_id');
-    var detoff = true;
-	var address ="";
-	var currentLoaction;
-	var title ="";
-	var shareLink = window.location.href;
-	var sharDesc = '';
-	var shareImg = '';
-    var tab = new tabs.Scroll('.tab', {role: 'tab'});
-        tab.on('beforeScrollStart',function(formIndex,toIndex){
-            if(toIndex == 1 && detoff){                
-                getInfo(event_id);				
-            }
-        });
+var requireFun = ['zepto','base','login','tab','address']; //['util','login','tab','address']
+seajs.use(requireFun,function(zepto,base,login,tab,add){ 
+var event_id = base.getURLVar('event_id');
+var detoff = true;
+var address ="";
+var currentLoaction;
+var title ="";
+var shareLink = window.location.href;
+var sharDesc = '';
+var shareImg = '';
+
+
+var tab = new tabs.Scroll('.tab', {role: 'tab'});
+    tab.on('beforeScrollStart',function(formIndex,toIndex){
+        if(toIndex == 1 && detoff){                
+            getInfo(event_id);				
+        }
+    });   
 		
-        $.ajax({
-            url: a.apiUrl.getBriefURL,
-			data:{
-				event_id : event_id
-			},
-            type: 'get',
-            dataType: 'json', 
-            beforeSend : function(){
-                a.tips("加载中...",1);
-            },           
-            success: function(data){
-            	console.log(data)
-				if(!data.data.status) return;				
-				$('.tips').hide();      
-				var status = data.data.status.toLocaleUpperCase();
-				var info = JSON.parse(data.data.other_info);
-				address = data.data.address;
-				title = data.data.title;
-				sharDesc = data.data.about;
-				shareImg = a.apiUrl.imgURL + data.data.logo_image;				
-				setCurrentState(data.data.signline, data.data.deadline, data.data.begin_date, data.data.end_date);	
+    $.ajax({
+        url: base.getBriefURL,
+		data:{
+			event_id : event_id
+		},
+        type: 'get',
+        dataType: 'json', 
+        beforeSend : function(){
+            base.tips("加载中...",1);
+        },           
+        success: function(data){
+			if(!data.data.status) return;				
+			$('.tips').hide();      
+			var status = data.data.status.toLocaleUpperCase();
+			var info = JSON.parse(data.data.other_info);
+			address = data.data.address;
+			title = data.data.title;
+			sharDesc = data.data.about;
+			shareImg = base.imgURL + data.data.logo_image;				
+			setCurrentState(data.data.signline, data.data.deadline, data.data.begin_date, data.data.end_date);	
 
-				var _html = '<div class="weui_panel weui_panel_access"><div class="weui_media_box weui_media_appmsg bb list">' +
-							'<div class="weui_media_hd">' +
-								'<img alt="" src="' + a.apiUrl.imgURL + data.data.logo_image + '" class="weui_media_appmsg_thumb">' +
-							'</div>' +
-							'<div class="weui_media_bd">' +
-								'<h4 class="title">' + data.data.title + '</h4>' +
-								'<p class="weui_media_desc"><span class="about-follow">' + data.data.attention_num + '</span> <span class="text-danger">¥' + data.data.cost + ' 元起</span></p>' +
-								'<p class="weui_media_desc">' + a.getCurrentStatus(data.data.signline,data.data.deadline,data.data.begin_date,data.data.end_date) + '</p>' +
-							'</div>' +
-						'</div></div>'+
-						'<div class="weui_panel"> <div class="weui_article p10"><h4 class="weui_media_title about-icon">简介</h4><div class="weui_media_desc"> ' + a.textEnter(data.data.about) + ' </div></div></div>' +
-						'<div class="weui_panel weui_panel_access">';
-				
-                    if(info){
-						_html +=  '<div class="weui_media_box weui_media_text p10"><h4 class="weui_media_title host-icon">组织方</h4>';
-						if(info.organizer){
-							_html +=  '<p class="weui_media_desc">主办单位： ' + info.organizer + '</p>';
-						}						
-						if(info.contractor){
-							_html +=  '<p class="weui_media_desc">承办单位： ' + info.contractor + '</p>';
-						}
-						
-						if(info.co_organizer){
-							_html +=  '<p class="weui_media_desc">协办单位： ' + info.co_organizer + '</p>';
-						}
-						 
-						if(info.sponsor){
-							_html +=  '<p class="weui_media_desc">赞助单位： ' + info.sponsor + '</p>';
-						}						
-						_html += '</div>';
-                    };
-					
-                    if(data.data.begin_date){
-                        _html += '<div class="weui_media_box weui_media_text p10"><h4 class="weui_media_title time-icon">时间</h4> <p class="weui_media_desc">报名时间：' + data.data.signline + ' -- ' + data.data.deadline + '</p>';
-						
-						if(data.data.begin_date){
-							_html +=  '<p class="weui_media_desc">比赛时间： ' + data.data.begin_date.substring(0,10) + ' -- ' + data.data.end_date.substring(0,10) + '</p>';
-						}
-						
-						_html += '</div>';
-                    }
-					
-					if(data.data.address){
-                        _html += '<div id="map" data-map="'+ data.data.amap_coor +'" class="weui_media_box weui_media_text p10"><h4 class="weui_media_title site-icon">地点</h4> <p class="weui_media_desc">' + d.getAddress(data.data.region_id)  + data.data.address + '</p></div>';
-                    }					
-
-					
-                    if(info){
-                        _html += '<div class="weui_media_box weui_media_text p10"><h4 class="weui_media_title advisory-icon">咨询</h4>';						
-						if(info.contact_name){
-							_html +=  '<p class="weui_media_desc">联系人： ' + info.contact_name + '</p>';
-						}
-						
-						if(info.contact_tel){
-							_html +=  '<p class="weui_media_desc">联系电话： ' + info.contact_tel + '</p>';
-						}
-						
-						if(info.contact_wx){
-							_html +=  '<p class="weui_media_desc">微信账号： ' + info.contact_wx + '</p>';
-						}
-						
-						if(info.contact_mail){
-							_html +=  '<p class="weui_media_desc">邮箱地址： ' + info.contact_mail + '</p>';
-						}
-						
-						_html += '</div>';
+			var _html = '<div class="weui_panel weui_panel_access"><div class="weui_media_box weui_media_appmsg bb list">' +
+						'<div class="weui_media_hd">' +
+							'<img alt="" src="' + base.imgURL + data.data.logo_image + '" class="weui_media_appmsg_thumb">' +
+						'</div>' +
+						'<div class="weui_media_bd">' +
+							'<h4 class="title">' + data.data.title + '</h4>' +
+							'<p class="weui_media_desc"><span class="about-follow">' + data.data.attention_num + '</span> <span class="text-danger">¥' + data.data.cost + ' 元起</span></p>' +
+							'<p class="weui_media_desc">' + base.getCurrentStatus(data.data.signline,data.data.deadline,data.data.begin_date,data.data.end_date) + '</p>' +
+						'</div>' +
+					'</div></div>'+
+					'<div class="weui_panel"> <div class="weui_article p10"><h4 class="weui_media_title about-icon">简介</h4><div class="weui_media_desc"> ' + base.textEnter(data.data.about) + ' </div></div></div>' +
+					'<div class="weui_panel weui_panel_access">';
+			
+                if(info){
+					_html +=  '<div class="weui_media_box weui_media_text p10"><h4 class="weui_media_title host-icon">组织方</h4>';
+					if(info.organizer){
+						_html +=  '<p class="weui_media_desc">主办单位： ' + info.organizer + '</p>';
+					}						
+					if(info.contractor){
+						_html +=  '<p class="weui_media_desc">承办单位： ' + info.contractor + '</p>';
 					}
-                    
-                    _html +='</div>';   
-                ;
-                $("#synopsis").append(_html);
-
-			 
-            },
-            error: function(res){
-                a.tips("网络有点卡");
-            }
-        });
-
-        function getInfo(event_id){
-            detoff = false;
-            $.ajax({
-                url: a.apiUrl.getInfoURL + '?event_id=' + event_id,
-                type: 'get',
-                dataType: 'json',
-                beforeSend : function(){
-                    a.tips("加载中...",1);
-                },
-                success: function(data){
-                    $('.tips-message').hide();
-                    $('#getInfo').html(data.data.content);
-					//图片阅读
-					//$.photoPreview('#getInfo');
-                },
-                error: function(res){
-                    a.tips("网络有点卡");
+					
+					if(info.co_organizer){
+						_html +=  '<p class="weui_media_desc">协办单位： ' + info.co_organizer + '</p>';
+					}
+					 
+					if(info.sponsor){
+						_html +=  '<p class="weui_media_desc">赞助单位： ' + info.sponsor + '</p>';
+					}						
+					_html += '</div>';
+                };
+				
+                if(data.data.begin_date){
+                    _html += '<div class="weui_media_box weui_media_text p10"><h4 class="weui_media_title time-icon">时间</h4> <p class="weui_media_desc">报名时间：' + data.data.signline + ' -- ' + data.data.deadline + '</p>';
+					
+					if(data.data.begin_date){
+						_html +=  '<p class="weui_media_desc">比赛时间： ' + data.data.begin_date.substring(0,10) + ' -- ' + data.data.end_date.substring(0,10) + '</p>';
+					}
+					
+					_html += '</div>';
                 }
-            })
-        };
+							
+				if(data.data.address){
+                    _html += '<div id="map" data-map="'+ data.data.amap_coor +'" class="weui_media_box weui_media_text p10"><h4 class="weui_media_title site-icon">地点</h4> <p class="weui_media_desc">' +  add.getAddress(data.data.region_id) + data.data.address + '</p></div>';
+                }		
+
+                if(info){
+                    _html += '<div class="weui_media_box weui_media_text p10"><h4 class="weui_media_title advisory-icon">咨询</h4>';						
+					if(info.contact_name){
+						_html +=  '<p class="weui_media_desc">联系人： ' + info.contact_name + '</p>';
+					}
+					
+					if(info.contact_tel){
+						_html +=  '<p class="weui_media_desc">联系电话：<a style="color: #999;" href="tel:'+ info.contact_tel +'">' + info.contact_tel + '</a></p>';
+					}
+					
+					if(info.contact_wx){
+						_html +=  '<p class="weui_media_desc">微信账号： ' + info.contact_wx + '</p>';
+					}
+					
+					if(info.contact_mail){
+						_html +=  '<p class="weui_media_desc">邮箱地址： ' + info.contact_mail + '</p>';
+					}
+					
+					_html += '</div>';
+				}
+                
+                _html +='</div>';   
+            ;
+            $("#synopsis").append(_html);
+
+		 
+        },
+        error: function(res){
+            a.tips("网络有点卡");
+        }
+    });
+
+	function getInfo(event_id){
+		detoff = false;
+		$.ajax({
+			url: base.getInfoURL + '?event_id=' + event_id,
+			type: 'get',
+			dataType: 'json',
+			beforeSend : function(){
+				base.tips("加载中...",1);
+			},
+			success: function(data){
+				$('.tips-message').hide();
+				$('#getInfo').html(data.data.content);
+			},
+			error: function(res){
+				base.tips("网络有点卡");
+			}
+		})
+	};
  
 
-        function setCurrentState(signline,deadline,begin_date,end_date){		
-			var signlineDate = signline.substring(0,10).split('-');
-			var deadlineDate = deadline.substring(0,10).split('-');
-			var beginDate = begin_date.substring(0,10).split('-');
-			var endDate = end_date.substring(0,10).split('-');
-			signlineDate = signlineDate[1] + '/' + signlineDate[2] + '/' + signlineDate[0] + ' ' + signline.substring(10, 19);
-			deadlineDate = deadlineDate[1] + '/' + deadlineDate[2] + '/' + deadlineDate[0] + ' ' + deadline.substring(10, 19);
-			beginDate = beginDate[1] + '/' + beginDate[2] + '/' + beginDate[0] + ' ' + begin_date.substring(10, 19);
-			endDate = endDate[1] + '/' + endDate[2] + '/' + endDate[0] + ' ' + deadlineDate.substring(10, 19);			
-			var today = new Date().getTime();
-			if(today < Date.parse(signlineDate)){
-				$('.footer').append('<a class="weui_btn weui_btn_disabled weui_btn_default" onclick="alert(\'预热中\')" href="javascript:void(0)">预热中</a>');
-			}else if(today < Date.parse(deadlineDate)){
-				$('.footer').append('<a class="weui_btn weui_btn_warn" href="group.html?event_id=' + event_id +' ">我要报名</a>');
-			}else if(today < Date.parse(beginDate)){
-				$('.footer').append('<a class="weui_btn weui_btn_disabled weui_btn_default" onclick="alert(\'即将开始\')" href="javascript:void(0)">即将开始</a>');	
-			}else if(today < Date.parse(endDate)){
-				$('.footer').append('<a class="weui_btn weui_btn_disabled weui_btn_default" onclick="alert(\'报名已结束\')" href="javascript:void(0)">报名已结束</a>');
-			}else{
-				$('.footer').append('<a class="weui_btn weui_btn_disabled weui_btn_default" onclick="alert(\'报名已结束\')" href="javascript:void(0)">报名已结束</a>');
-			}	
-        }; 
+	function setCurrentState(signline,deadline,begin_date,end_date){		
+		var signlineDate = signline.substring(0,10).split('-');
+		var deadlineDate = deadline.substring(0,10).split('-');
+		var beginDate = begin_date.substring(0,10).split('-');
+		var endDate = end_date.substring(0,10).split('-');
+		signlineDate = signlineDate[1] + '/' + signlineDate[2] + '/' + signlineDate[0] + ' ' + signline.substring(10, 19);
+		deadlineDate = deadlineDate[1] + '/' + deadlineDate[2] + '/' + deadlineDate[0] + ' ' + deadline.substring(10, 19);
+		beginDate = beginDate[1] + '/' + beginDate[2] + '/' + beginDate[0] + ' ' + begin_date.substring(10, 19);
+		endDate = endDate[1] + '/' + endDate[2] + '/' + endDate[0] + ' ' + deadlineDate.substring(10, 19);			
+		var today = new Date().getTime();
+		if(today < Date.parse(signlineDate)){
+			$('.footer').append('<a class="weui_btn weui_btn_disabled weui_btn_default" onclick="alert(\'预热中\')" href="javascript:void(0)">预热中</a>');
+		}else if(today < Date.parse(deadlineDate)){
+			$('.footer').append('<a class="weui_btn weui_btn_warn" href="group.html?event_id=' + event_id +' ">我要报名</a>');
+		}else if(today < Date.parse(beginDate)){
+			$('.footer').append('<a class="weui_btn weui_btn_disabled weui_btn_default" onclick="alert(\'即将开始\')" href="javascript:void(0)">即将开始</a>');	
+		}else if(today < Date.parse(endDate)){
+			$('.footer').append('<a class="weui_btn weui_btn_disabled weui_btn_default" onclick="alert(\'报名已结束\')" href="javascript:void(0)">报名已结束</a>');
+		}else{
+			$('.footer').append('<a class="weui_btn weui_btn_disabled weui_btn_default" onclick="alert(\'报名已结束\')" href="javascript:void(0)">报名已结束</a>');
+		}	
+	}; 
 
-		//地理位置
-		$('#synopsis').on('click','#map',function(){
-			var amap = $(this).data('map');
-			var isMap = amap.split(",");
-			if(isMap[0] == 0 || isMap[1] == 0){				
-				a.tips("暂无地址定位数据");
-			}else{
-				window.location.href = "http://m.amap.com/navi/?start="+ currentLoaction.longitude +"," + currentLoaction.latitude + "&dest=" + amap +"&destName="+ address +"&key=faaddee69a0a4d1dca3576d2ae9c2ff6"
-			}
-		});
+	//地理位置
+	$('#synopsis').on('click','#map',function(){
+		var amap = $(this).data('map');
+		var isMap = amap.split(",");
+		if(isMap[0] == 0 || isMap[1] == 0){				
+			base.tips("暂无地址定位数据");
+		}else{
+			window.location.href = "http://m.amap.com/navi/?start="+ currentLoaction.longitude +"," + currentLoaction.latitude + "&dest=" + amap +"&destName="+ address +"&key=faaddee69a0a4d1dca3576d2ae9c2ff6"
+		}
+	});
 
-	 
-	
+
+	//微信
 	//微信分享
 	var href = window.location.href;
 	var url = href.split('#')[0];
 	$.ajax({
 		type: 'get',
-		url: a.apiUrl.wxSignURL,
+		url: baseURL + "other/api/wx_js_sign",
 		data: {
 			appid:'wxcc5c198d146a1779', 
 			url:url
@@ -249,7 +248,8 @@ seajs.use(['util','login','tab','address'], function(a,b,c,d){
 				jsApiList : ["onMenuShareTimeline", "onMenuShareAppMessage", "onMenuShareQQ", "onMenuShareWeibo", "getLocation"] // 必填，需要使用的JS接口列表，所有JS接口列表见附录2
 			});
 			
-			wx.ready(function(){			
+			wx.ready(function(){
+			
 				wx.getLocation({
 					type: 'wgs84', // 默认为wgs84的gps坐标，如果要返回直接给openLocation用的火星坐标，可传入'gcj02'
 					success: function (res) {
@@ -329,10 +329,9 @@ seajs.use(['util','login','tab','address'], function(a,b,c,d){
 			});
 		}
 	});
+
+	
 });
-
-
 </script>
-
 </body>
 </html>

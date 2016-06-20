@@ -12,7 +12,7 @@
 <meta name="author" content="活力圈" />
 <meta name="webcrawlers" content="all" />
 <link rel="stylesheet" type="text/css" href="../dist/css/hlq.min.css">
-<script type="text/javascript" src="../dist/js/seajs/2.1.1/sea.js"></script>
+<script type="text/javascript" src="../dist/js/sea.js"></script>
 <script type="text/javascript" src="../dist/js/sea_config.js"></script>
 </head>
 <body>
@@ -34,15 +34,16 @@
 </div>
 <div id="back_top"></div>
 <script type="text/javascript">
-seajs.use(['util','login','dropload'], function(a,b,c){
+var requireFun = ['zepto','base','login','dropload','jweixin'];
+seajs.use(requireFun, function(a,base,b,c){
 
-    var content = a.getURLVar('content'),
+    var content = base.getURLVar('content'),
         community_cid = $("#community_cid").val(),
         official = $("#official").val(),
         page_size = $("#page_size").val(),
         page = $("#page").val(),  
         event_type = $("#event_type").val(),
-        location_id = a.getItem('city_id'),
+        location_id = base.getItem('city_id'),
         intswitch= true;
 
     console.log(content);
@@ -51,7 +52,7 @@ seajs.use(['util','login','dropload'], function(a,b,c){
         loadDownFn : function(me){
             $.ajax({
                 type: 'GET',			
-                url: a.apiUrl.eventSearchURL + "?community_cid=" + community_cid + "&location_id=" + location_id + "&official=" + official + "&page_size=" + page_size + "&page=" + page + "&content=" + content + "&event_type=" + event_type,
+                url: base.eventSearchURL + "?community_cid=" + community_cid + "&location_id=" + location_id + "&official=" + official + "&page_size=" + page_size + "&page=" + page + "&content=" + content + "&event_type=" + event_type,
                 dataType: 'json',
                 success: function(data){
                     page++;
@@ -59,15 +60,14 @@ seajs.use(['util','login','dropload'], function(a,b,c){
                     var _html = '';
                     if(data.data.list.length < 1){
                         me.lock();
-                        // 无数据
                         me.noData();
                     }
                     for(var i = 0; i < response.length; i++){
                         _html +='<a class="weui_media_box weui_media_appmsg list" href="detail/index.html?event_id='+ response[i].event_id +'">'
-                                +'<div class="weui_media_hd"><img alt="" src="' + a.apiUrl.imgURL + response[i].logo_image + '" class="weui_media_appmsg_thumb"></div>'
+                                +'<div class="weui_media_hd"><img alt="" src="' + base.imgURL + response[i].logo_image + '" class="weui_media_appmsg_thumb"></div>'
                                 +'<div class="weui_media_bd"><h4 class="title">' + response[i].title +' </h4>'
                                 +'<div class="list_doce"><span class="price">￥<em>' + response[i].cost +'</em>起</span> ' + response[i].name +'</div>'
-                                +'<div class="list_doce"><p class="pull-right"> ' + a.getCurrentStatus(response[i].signline,response[i].deadline,response[i].begin_date,response[i].end_date) +' </p> <span class="list-city">' + response[i].address +' </span> <span class="list-follow">' + response[i].attention_num +'</span></div></div>'
+                                +'<div class="list_doce"><p class="pull-right"> ' + base.getCurrentStatus(response[i].signline,response[i].deadline,response[i].begin_date,response[i].end_date) +' </p> <span class="list-city">' + response[i].address +' </span> <span class="list-follow">' + response[i].attention_num +'</span></div></div>'
                                 +'</a>';
 			 
                     }
@@ -76,7 +76,7 @@ seajs.use(['util','login','dropload'], function(a,b,c){
                     me.resetload();
                 },
                 error: function(xhr, type){
-                    H.tips("网络有点卡");
+                    base.tips("网络有点卡");
                     if(intswitch){
                        me.resetload();
                        intswitch = false;
@@ -86,6 +86,9 @@ seajs.use(['util','login','dropload'], function(a,b,c){
         }
     });
 
+    //禁止微信
+    //require('jweixin')
+    base.hideOptionMenuWx();
 	
 });
 </script>

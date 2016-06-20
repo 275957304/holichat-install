@@ -11,52 +11,69 @@
 <meta name="distribution" content="global" />
 <meta name="author" content="活力圈" />
 <meta name="webcrawlers" content="all" />
-<link rel="stylesheet" type="text/css" href="../../dist/css/hlq.min.css">
 <script type="text/javascript" src="../../dist/js/seajs/2.1.1/sea.js"></script>
 <script type="text/javascript" src="../../dist/js/sea_config.js"></script>
 <style type="text/css">
+body{margin:0;padding:0;font-family: Helvetica Neue,Helvetica,Arial,sans-serif;}
 .article-top{border-bottom:1px solid #d1d1d1; padding:10px;}
-.article-top .title{font-size:16px; color:#040404; text-align: justify;}
-.article-top .article-desc{margin-top:5px; font-size:14px; color:#7e7e7e;}
-.article-top .article-desc a{margin-left:15px; color:#55769f;}
+.article-top .title{font-size:16px; color:#040404; text-align: justify; margin:0;}
+.article-top .article-desc{margin:5px 0 0 0; font-size:14px; color:#7e7e7e;}
+.article-top .article-desc #source{margin-left:15px; color:#55769f;}
+#main{padding:10px;}
+#main img{max-width:100%;}
+#main p{display:block; margin:0; text-align: justify;}
 </style>
 </head>
-<body class="b-white">
-<header class="header">
-    <div class="bnt-back" onclick="history.back()"><i class="icon-back"></i></div>
-    <h1>资讯</h1>
-</header>
-<div class="main">
-	<div class="article-top">
-		<h2 class="title"></h2>
-		<p class="article-desc"><span id="time">2016-06-15</span><a href="#">活力圈</a></p>
-	</div>
-	<div id="main" class="article">	
-	</div>	
+<body>
+<div class="main-content">	
 </div>
 <script type="text/javascript">
 seajs.use(['util'], function(a){
-	var get_id = a.getURLVar('id');	
+	var get_id = a.getURLVar('id');
+	var get_type = a.getURLVar('type');	
+	var get_source = window.location.search.substr(1).split('&')[2];
+	var setUrl = '';  
+	switch(get_type){
+		case 'pf' : setUrl = 'http://192.168.1.234/server4.0/index.php/news/pf/info' ; break;
+		case 'star' : setUrl = 'http://192.168.1.234/server4.0/index.php/news/star/info' ; break;
+		case 'community' : setUrl = 'http://192.168.1.234/server4.0/index.php/news/community/info' ; break;
+	};	
+	$('#source').html(decodeURIComponent(get_source.split('=')[1]));	
     $.ajax({
         type: 'get',
-        //url: a.apiUrl.newsPfInfoURL,
-        url: 'http://192.168.1.205/holichat_server/index.php/news/pf/info',
+        url: setUrl,
         data:{id:get_id},
         dataType: 'json',
-        beforeSend : function(){
-            a.tips("加载中...",1);
-        },
-        success: function(data) {
-			console.log(data);
-			$('.title').text(data.data.title);
-			$('#time').text(data.data.create_time);
-			$('#main').text(data.data.content);
+        success: function(data){
+			if(data.data){
+				var html = '<div class="article-top">'  +
+							'<h2 class="title">' + data.data.title + '</h2>' +
+							'<p class="article-desc"><span id="time">'+ data.data.create_time.substr(0,10) +'</span><span id="source">'+ decodeURIComponent(get_source.split('=')[1]) +'</span></p>'+
+						'</div>' +
+						'<div id="main" class="article">'+ data.data.content +'</div>';
+				$('.main-content').append(html);
+				resizeIframe();
+			}else{
+				a.tips('没有内容!');
+				setTimeout(function(){
+					history.back();
+				},2000);
+			}			
         },
         error: function(xhr, type) {
             a.tips("网络错误");
         }
     });
-
+	
+	//优酷视频缩放
+	function resizeIframe(){
+		var bodyw = document.body.clientWidth - 20;
+		for(var i=0; i < document.getElementsByTagName("iframe").length; i++){
+			var scale = Math.min(bodyw/document.getElementsByTagName("iframe")[i].width, 1);
+			document.getElementsByTagName("iframe")[i].style.width = parseInt(document.getElementsByTagName("iframe")[i].width * scale) + 'px';	
+			document.getElementsByTagName("iframe")[i].style.height = parseInt(document.getElementsByTagName("iframe")[i].height * scale) + 'px';
+		}
+	}	
 })
     
 </script>

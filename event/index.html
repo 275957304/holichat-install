@@ -15,7 +15,7 @@
 <link href="../dist/img/ico16.ico" rel="shortcut icon">
 <link href="../dist/img/icon_152.png" sizes=152x152 rel="apple-touch-icon">
 <link rel="stylesheet" type="text/css" href="../dist/css/hlq.min.css">
-<script type="text/javascript" src="../dist/js/seajs/2.1.1/sea.js"></script>
+<script type="text/javascript" src="../dist/js/sea.js"></script>
 <script type="text/javascript" src="../dist/js/sea_config.js"></script>
 </head>
 <body>
@@ -47,16 +47,9 @@
 <div id="back_top"></div>
 
 <script type="text/javascript">
-/*
-seajs.use(['address'], function( a ){
-	console.log(a.getAddress("150000"))
-});
-*/
-seajs.use(['util','login','dropload'], function(a,b,c){
-	//console.log(a.getItem('session'));
-	//console.log(a.getItem('uid'));
-	
- 
+var requireFun = ['zepto','base','login','dropload'];
+seajs.use(requireFun, function(zepto,base,login,dropload){
+	console.log(base.getItem('uid'));
 	var community_cid = 0,
 		category_id = 0,
 		status = "",
@@ -65,18 +58,16 @@ seajs.use(['util','login','dropload'], function(a,b,c){
 		page_size = 10,
 		page = 1,
 		event_type = 0,
-		location_id = a.getURLVar('city_id') || a.getItem('city_id');
+		location_id = base.getURLVar('city_id') || base.getItem('city_id');
 
-		console.log(location_id) 
-
-	$('.btn_city').text(a.getItem('city_name'));
-
+		//console.log(location_id) 
+	$('.btn_city').text(base.getItem('city_name'));
     $('.main').dropload({
         scrollArea : window,
         loadDownFn : function(me){
             $.ajax({
                 type: 'GET',
-                url: a.apiUrl.eventListURL,
+                url: base.eventList,
                 data: {
                     community_cid:community_cid,
                     category_id:category_id,
@@ -95,15 +86,14 @@ seajs.use(['util','login','dropload'], function(a,b,c){
                     var _html = '';
                     if(data.data.list.length < 1){
                         me.lock();
-                        // 无数据
                         me.noData();
                     };
                     for(var i = 0; i < response.length; i++){
                         _html +='<a class="weui_media_box weui_media_appmsg list" href="detail/index.html?event_id='+ response[i].event_id +'">'
-                                +'<div class="weui_media_hd"><img alt="" src="' + a.apiUrl.imgURL + response[i].logo_image + '" class="weui_media_appmsg_thumb"></div>'
+                                +'<div class="weui_media_hd"><img alt="" src="' + base.imgURL + response[i].logo_image + '" class="weui_media_appmsg_thumb"></div>'
                                 +'<div class="weui_media_bd"><h4 class="title">' + response[i].title +' </h4>'
                                 +'<div class="list_doce"><span class="price">¥<em>' + response[i].cost +'</em>起</span> ' + response[i].name +'</div>'
-                                +'<div class="list_doce"><p class="pull-right"> ' + a.getCurrentStatus(response[i].signline,response[i].deadline,response[i].begin_date,response[i].end_date) +' </p> <span class="list-city">' + response[i].address +' </span> <span class="list-follow">' + response[i].attention_num +'</span></div></div>'
+                                +'<div class="list_doce"><p class="pull-right"> ' + base.getCurrentStatus(response[i].signline,response[i].deadline,response[i].begin_date,response[i].end_date) +' </p> <span class="list-city">' + response[i].address +' </span> <span class="list-follow">' + response[i].attention_num +'</span></div></div>'
                                 +'</a>';
 			 
                     }
@@ -111,7 +101,7 @@ seajs.use(['util','login','dropload'], function(a,b,c){
                     me.resetload();
                 },
                 error: function(xhr, type){                    
-                    a.tips("网络有点卡");
+                    base.tips("网络有点卡");
                     if(intswitch){
                        me.resetload();
                        intswitch = false;
@@ -126,114 +116,12 @@ seajs.use(['util','login','dropload'], function(a,b,c){
 		e.preventDefault();		
 		var content =$.trim( $('#keyword').val());
         if(content ==''){
-         	a.tips("内容不能为空");
+         	base.tips("内容不能为空");
          	return false;
         };
         window.location.href = 'search.html?content='+ encodeURI(encodeURI(content));
     });
  
-	
-	//微信分享
-	var href = window.location.href,
-		url = href.split('#')[0],
-		shareTitle = "活力圈赛事活动",
-		shareLink = "http://m.holichat.com/event/index.html",
-		shareImg = "http://m.holichat.com/dist/img/logo.png",
-		shareDesc = "海量赛事活动，等你来参加。";
-
-	$.ajax({
-		type: 'get',
-		url: a.apiUrl.wxSignURL,
-		data: {
-			appid:'wxcc5c198d146a1779', 
-			url:url
-		},
-		dataType: 'json',
-		success: function(data){
-			console.log(data);					
-			wx.config({
-				debug     : false, 
-				appId     : "wxcc5c198d146a1779", 
-				timestamp : data.data.timestamp, 
-				nonceStr  : data.data.noncestr,
-				signature : data.data.signature,
-				jsApiList : ["onMenuShareTimeline", "onMenuShareAppMessage", "onMenuShareQQ", "onMenuShareWeibo","openLocation", "getLocation"]
-			});
-			
-			wx.ready(function(){		
-				
-				// 分享到朋友圈
-				wx.onMenuShareTimeline({
-					title: shareTitle, // 分享标题
-					link: shareLink, // 分享链接
-					imgUrl: shareImg, // 分享图标
-					success: function () { 
-						// 用户确认分享后执行的回调函数
-					},
-					cancel: function () { 
-						// 用户取消分享后执行的回调函数
-					}
-				});
-				
-				//分享给朋友
-				wx.onMenuShareAppMessage({
-					title: shareTitle, // 分享标题
-					desc: shareDesc, // 分享描述
-					link: shareLink, // 分享链接
-					imgUrl: shareImg, // 分享图标
-					type: '', // 分享类型,music、video或link，不填默认为link
-					dataUrl: '', // 如果type是music或video，则要提供数据链接，默认为空
-					success: function () { 
-						// 用户确认分享后执行的回调函数
-					},
-					cancel: function () { 
-						// 用户取消分享后执行的回调函数
-					}
-				});
-				
-				wx.onMenuShareQQ({
-					title: shareTitle, // 分享标题
-					desc: shareDesc, // 分享描述
-					link: shareLink, // 分享链接
-					imgUrl: shareImg, // 分享图标
-					success: function () { 
-					   // 用户确认分享后执行的回调函数
-					},
-					cancel: function () { 
-					   // 用户取消分享后执行的回调函数
-					}
-				});
-				
-				wx.onMenuShareWeibo({
-					title: shareTitle, // 分享标题
-					desc: shareDesc, // 分享描述
-					link: shareLink, // 分享链接
-					imgUrl: shareImg, // 分享图标
-					success: function () { 
-					   // 用户确认分享后执行的回调函数
-					},
-					cancel: function () { 
-						// 用户取消分享后执行的回调函数
-					}
-				});
-				
-				wx.onMenuShareQZone({
-					title: shareTitle, // 分享标题
-					desc: shareDesc, // 分享描述
-					link: shareLink, // 分享链接
-					imgUrl: shareImg, // 分享图标
-					success: function () { 
-					   // 用户确认分享后执行的回调函数
-					},
-					cancel: function () { 
-						// 用户取消分享后执行的回调函数
-					}
-				});
-				
-				
-			});
-		}
-	});
 
 });
 

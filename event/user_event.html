@@ -12,7 +12,7 @@
 <meta name="author" content="活力圈" />
 <meta name="webcrawlers" content="all" />
 <link rel="stylesheet" type="text/css" href="../dist/css/hlq.min.css">
-<script type="text/javascript" src="../dist/js/seajs/2.1.1/sea.js"></script>
+<script type="text/javascript" src="../dist/js/sea.js"></script>
 <script type="text/javascript" src="../dist/js/sea_config.js"></script>
 </head>
 <style>
@@ -38,8 +38,8 @@
 </div>
 <div id="back_top"></div>
 <script type="text/javascript">
-seajs.use(['util','dropload'], function(a,b){
-
+var requireFun = ['zepto','base','login','dropload','jweixin'];
+seajs.use(requireFun, function(zepto,base,login){
 	var page_size = $("#page_size").val();
 	var page = $("#page").val();
 	
@@ -49,9 +49,9 @@ seajs.use(['util','dropload'], function(a,b){
 			$.ajax({
 				type: 'GET',
 				async: false,
-				url: a.apiUrl.userEventURL,
+				url: base.userEventURL,
 				data: {
-					session: a.getItem('session'),
+					session: base.getItem('session'),
 					page_size:page_size,
 					page:page
 				},
@@ -67,12 +67,12 @@ seajs.use(['util','dropload'], function(a,b){
 						me.noData();
 					}
 					for(var i = 0; i < response.length; i++){
-						var getCurrentStatus = a.getCurrentStatus( response[i].signline, response[i].deadline, response[i].begin_date, response[i].end_date);
-						var projectGroup = getGroup(response[i].event_project_id,response[i].event_group_id);	
+						var getCurrentStatus = base.getCurrentStatus( response[i].signline, response[i].deadline, response[i].begin_date, response[i].end_date);
+						var projectGroup = base.getGroup(response[i].event_project_id,response[i].event_group_id);	
 						var getProjectGroup = JSON.parse(projectGroup);
 						var currentStatus = getCurrentStatus.replace(/<[^>]+>/g,"");
 						_html +='<div id="'+ response[i].event_enroll_id +'" class="weui_media_box weui_media_appmsg list">' + 
-								'<div class="weui_media_hd pr"><img alt="" src="' + a.apiUrl.imgURL + response[i].logo_image + '" class="weui_media_appmsg_thumb"><p class="state">'+ getCurrentStatus +'</p></div>'+
+								'<div class="weui_media_hd pr"><img alt="" src="' + base.imgURL + response[i].logo_image + '" class="weui_media_appmsg_thumb"><p class="state">'+ getCurrentStatus +'</p></div>'+
 								'<div class="weui_media_bd">' +	pay_status(currentStatus, response[i].pay_status, response[i].event_enroll_id, response[i].event_id, response[i].event_project_id, response[i].event_group_id) + 
 								'<h4 class="title">'+ response[i].title +'</h4>' +                               
 								'<p class="weui_media_desc group">项目：'+ getProjectGroup.data.group +'</p><p class="weui_media_desc group">组别：'+ getProjectGroup.data.project +'</p></div></div>';
@@ -82,7 +82,7 @@ seajs.use(['util','dropload'], function(a,b){
 					me.resetload();
 				},
 				error: function(xhr, type){                    
-					H.tips("网络有点卡");
+					base.tips("网络有点卡");
 					if(intswitch){
 					me.resetload();
 					intswitch = false;
@@ -92,20 +92,6 @@ seajs.use(['util','dropload'], function(a,b){
 		}
 	}); 
 
-
-	function getGroup(project,group){
-		var result;
-		$.ajax({
-			url: a.apiUrl.eventProGroupInfoURL,
-			async: false,//改为同步方式
-			type: "GET",
-			data: {event_project_id : project,event_group_id : group},
-			success: function (data) {
-				result = data;
-			}
-		});
-		return result;
-	};
  
 	function pay_status(currentStatus,status,enroll_id, event_id, project_id, group_id){
 		if(status == 'S'){		
@@ -132,37 +118,10 @@ seajs.use(['util','dropload'], function(a,b){
 			return;
 		}
 	};
-		
 	
-	//禁用微信分享
-	var href = window.location.href;
-	var url = href.split('#')[0];
-	$.ajax({
-		type: 'get',
-		url: a.apiUrl.wxSignURL,
-		data: {
-			appid:'wxcc5c198d146a1779', 
-			url:url
-		},
-		dataType: 'json',
-		success: function(data){
-			console.log(data);
-			wx.config({
-				debug     : false,
-				appId     : "wxcc5c198d146a1779",
-				timestamp : data.data.timestamp,
-				nonceStr  : data.data.noncestr,
-				signature : data.data.signature,
-				jsApiList : ["onMenuShareTimeline", "onMenuShareAppMessage", "onMenuShareQQ", "onMenuShareWeibo"] 
-			});
-			
-			wx.ready(function(){		
-				wx.hideOptionMenu();
-			});
-		}
-	});
-	
-
+	//禁止微信
+	//require('jweixin')
+	base.hideOptionMenuWx();
 
 });
 </script>

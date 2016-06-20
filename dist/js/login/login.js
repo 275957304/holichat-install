@@ -1,7 +1,7 @@
 
 define(function(require, exports, module){
     //require('./login.css'); 
-    var H = require('util');
+    var H = require('base');
     var uid = H.getItem('uid'),
         session = H.getItem('session'),
         device = H.getItem("device"),
@@ -10,16 +10,16 @@ define(function(require, exports, module){
         event_id = H.getURLVar("event_id"),
         source = H.getURLVar("source"); 
 
-    $.get( H.apiUrl.checkSessionUrl,{target_uid: uid , save_session:session, device:device},function(response){
+    $.get( H.checkSessionUrl,{target_uid: uid , save_session:session, device:device},function(response){
         console.log(response);
         //console.log(H.apiUrl.loginURL);
         if(response.ret != 0){           
             if(event_id){
-                setval = H.apiUrl.loginURL + '?event_id=' + event_id;          
+                setval = H.loginURL + '?event_id=' + event_id;          
             }else if(source){
-                setval = H.apiUrl.loginURL + '?source=user_event'; 
+                setval = H.loginURL + '?source=user_event'; 
             }else{
-                setval = H.apiUrl.loginURL;
+                setval = H.loginURL;
             }
             if(H.isWeixin()){               
                 window.location.href = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=" + wxappid + "&redirect_uri=" + encodeURIComponent(setval) + "&response_type=code&scope=snsapi_userinfo#wechat_redirect";

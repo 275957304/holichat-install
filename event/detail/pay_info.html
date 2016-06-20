@@ -12,7 +12,7 @@
 <meta name="author" content="活力圈" />
 <meta name="webcrawlers" content="all" />
 <link rel="stylesheet" type="text/css" href="../../dist/css/hlq.min.css">
-<script type="text/javascript" src="../../dist/js/seajs/2.1.1/sea.js"></script>
+<script type="text/javascript" src="../../dist/js/sea.js"></script>
 <script type="text/javascript" src="../../dist/js/sea_config.js"></script>
 <style>
 .weui_mask{z-index: 10;}
@@ -108,23 +108,25 @@
 </div>
 
 <script type="text/javascript">
-seajs.use(['util','address'], function(a,b){
+var requireFun = ['zepto','base','address','jweixin'];
+seajs.use(requireFun, function(zepto,base,add){
 
-	var event_enroll_id = a.getURLVar('event_enroll_id');
-	var event_id = a.getURLVar('event_id'); 
-    var project_id = a.getURLVar('project_id'); 
-    var group_id = a.getURLVar('group_id');
+	var event_enroll_id = base.getURLVar('event_enroll_id');
+	var event_id = base.getURLVar('event_id'); 
+    var project_id = base.getURLVar('project_id'); 
+    var group_id = base.getURLVar('group_id');
 	var _html ='';
 
-	var openid = a.getItem('openid'); 
-	var guide = parseInt(a.getURLVar('guide'));
+	var openid = base.getItem('openid'); 
+	var guide = parseInt(base.getURLVar('guide'));
 	$('#guide,#follow').on('click', '.weui_mask', function (){
 		$('#guide').hide();
 		$('#follow').hide();	
 	});	
+	
 	//微信订阅检查
-	$.get(a.apiUrl.wxSubscribeURL,{openid:openid},function(data){
-		//console.log(data);
+	$.get(base.wxSubscribeURL,{openid:openid},function(data){
+		console.log(data);
 		if(data.data.subscribe == 1  &&  guide == 1){
 			$("#guide").show();
 		}
@@ -135,15 +137,15 @@ seajs.use(['util','address'], function(a,b){
 	
 	$.ajax({
         type: 'get',
-        url: a.apiUrl.eventOrderInfoURL,
+        url: base.eventOrderInfoURL,
         data: {
-            session:a.getItem('session'), 
-            uid:a.getItem('uid'), 
+            session:base.getItem('session'), 
+            uid:base.getItem('uid'), 
             event_enroll_id:event_enroll_id
         },
         dataType: 'json',
         beforeSend : function(){
-            a.tips("加载中...",1);
+            base.tips("加载中...",1);
         },
         success: function(data){
 			$('.tips').hide();	
@@ -160,13 +162,13 @@ seajs.use(['util','address'], function(a,b){
 			$('#group').text(getProjectGroup.data.group);			
 			$('#project').text(getProjectGroup.data.project);			
 			//开始时间与地址
-			$.get(a.apiUrl.getBriefURL,{'event_id' : event_id},function(data){
+			$.get(base.getBriefURL,{'event_id' : event_id},function(data){
 				$('#time').text(data.data.begin_date.substring(0,10));
-				$('#location').text( b.getAddress(data.data.region_id)  + data.data.address )
+				$('#location').text( add.getAddress(data.data.region_id)  + data.data.address )
 			},'json');
 			
 			//报名信息
-			$.get(a.apiUrl.eventTeamInfoURL,{'event_enroll_id':event_enroll_id},function(data){
+			$.get(base.eventTeamInfoURL,{'event_enroll_id':event_enroll_id},function(data){
 				if(data.data){
 					$('#team_name').append('<div class="weui_cell">队伍名称 <span class="weui_cell_desc">'+ data.data.team_name +'</span></div>');
 				}
@@ -187,9 +189,9 @@ seajs.use(['util','address'], function(a,b){
 				if(item.other_fields){
 					var fields = JSON.parse(item.other_fields);
 					$.ajax({
-						url: a.apiUrl.getEnrollInfoURL,
+						url: base.getEnrollInfoURL,
 						type: "GET",
-						data: {session:a.getItem('session'), uid:a.getItem('uid'), event_id:event_id},
+						data: {session:base.getItem('session'), uid:base.getItem('uid'), event_id:event_id},
 						dataType: 'json',
 						success: function (data) {
 							console.log(data)
@@ -216,14 +218,14 @@ seajs.use(['util','address'], function(a,b){
 		
         },
         error: function(res) {
-            H.tips("网络有点卡");
+            base.tips("网络有点卡");
         }
     });
 
     function getGroup(project,group){
 		var result;
 		$.ajax({
-			url: a.apiUrl.eventProGroupInfoURL,
+			url: base.eventProGroupInfoURL,
 			async: false,//改为同步方式
 			type: "GET",
 			data: {event_project_id : project,event_group_id : group},
@@ -235,38 +237,12 @@ seajs.use(['util','address'], function(a,b){
 	};
 	
 	//赛事入场验证检测
-	$.get(a.apiUrl.eventSignCheckURL,{'event_enroll_id':event_enroll_id},function(data){
+	$.get(base.eventSignCheckURL,{'event_enroll_id':event_enroll_id},function(data){
 		data.data.check ? $('#verification').html('已验证') : $('#verification').html('未验证');
 	},'json');
 	
-	//禁用微信分享
-	var href = window.location.href;
-	var url = href.split('#')[0];
-	$.ajax({
-		type: 'get',
-		url: a.apiUrl.wxSignURL,
-		data: {
-			appid:'wxcc5c198d146a1779', 
-			url:url
-		},
-		dataType: 'json',
-		success: function(data){
-			console.log(data);					
-			//通过config接口注入权限验证配置
-			wx.config({
-				debug     : false, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
-				appId     : "wxcc5c198d146a1779", // 必填，公众号的唯一标识
-				timestamp : data.data.timestamp, // 必填，生成签名的时间戳
-				nonceStr  : data.data.noncestr, // 必填，生成签名的随机串
-				signature : data.data.signature,// 必填，签名，见附录1
-				jsApiList : ["onMenuShareTimeline", "onMenuShareAppMessage", "onMenuShareQQ", "onMenuShareWeibo"] // 必填，需要使用的JS接口列表，所有JS接口列表见附录2
-			});
-			
-			wx.ready(function(){		
-				wx.hideOptionMenu();
-			});
-		}
-	});
+	//禁止微信
+	base.hideOptionMenuWx();
 	
 });
 </script>

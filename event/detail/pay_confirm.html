@@ -12,7 +12,7 @@
 <meta name="author" content="活力圈" />
 <meta name="webcrawlers" content="all" />
 <link rel="stylesheet" type="text/css" href="../../dist/css/hlq.min.css">
-<script type="text/javascript" src="../../dist/js/seajs/2.1.1/sea.js"></script>
+<script type="text/javascript" src="../../dist/js/sea.js"></script>
 <script type="text/javascript" src="../../dist/js/sea_config.js"></script>
 </head>
 <body>
@@ -44,18 +44,19 @@
     </div>
 </div>
 <script type="text/javascript">
-seajs.use(['util','jweixin'], function(a){
+var requireFun = ['zepto','base','idcard','base64','jweixin'];
+seajs.use(requireFun, function(zepto,base){
     var lock = false,
         order = -1,
         body_txt ='',
-        event_enroll_id = a.getURLVar('event_enroll_id'),
-        event_id = a.getURLVar('event_id'),
-        project_id = a.getURLVar('project_id'),
-        group_id = a.getURLVar('group_id'),
-        group_id = a.getURLVar('group_id'),
-        session = a.getItem('session'),
-        uid = a.getItem('uid'),
-        openid = a.getItem('openid'),
+        event_enroll_id = base.getURLVar('event_enroll_id'),
+        event_id = base.getURLVar('event_id'),
+        project_id = base.getURLVar('project_id'),
+        group_id = base.getURLVar('group_id'),
+        group_id = base.getURLVar('group_id'),
+        session = base.getItem('session'),
+        uid = base.getItem('uid'),
+        openid = base.getItem('openid'),
         _html ="",
         href = window.location.href,
         url = href.split('#')[0];
@@ -63,10 +64,10 @@ seajs.use(['util','jweixin'], function(a){
     //获取订单号
     $.ajax({
         type:'POST',
-        url:a.apiUrl.eventEnrollSelectURL,
+        url:base.eventEnrollSelectURL,
         data:{
             event_enroll_id_params : '[' + event_enroll_id + ']',
-            session : a.getItem('session')
+            session : base.getItem('session')
         },
         async: false,
         dataType: 'json',
@@ -83,7 +84,7 @@ seajs.use(['util','jweixin'], function(a){
 
     //赛事订单详细
     $.ajax({
-        url: a.apiUrl.eventOrderInfoURL,
+        url: base.eventOrderInfoURL,
         data: {
             session : session,
             uid : uid,
@@ -92,14 +93,14 @@ seajs.use(['util','jweixin'], function(a){
         type: 'get',
         dataType: 'json',
         beforeSend : function(){
-            a.tips("加载中...",1);
+            base.tips("加载中...",1);
         },
         success : function(data){
             console.log(data)
             $('.tips-message').hide();
             switch(data.ret){
-                case 6111: return a.tips("赛事订单错误");break;
-                case 6115: return a.tips("订单错误");break;
+                case 6111: return base.tips("赛事订单错误");break;
+                case 6115: return base.tips("订单错误");break;
             };
             body_txt = data.data.title;
             $('#amount').text(data.data.amount);
@@ -110,7 +111,7 @@ seajs.use(['util','jweixin'], function(a){
             $('#enrollInfos').append(_html);
         },
         error : function(res){
-            a.tips("网络有点卡");
+            base.tips("网络有点卡");
         }
     });
 
@@ -120,8 +121,8 @@ seajs.use(['util','jweixin'], function(a){
         console.log(openid);
 
         if (lock) return false;
-        if(!a.isWeixin()){
-            a.tips("请使用微信浏览器操作！~");
+        if(!base.isWeixin()){
+            base.tips("请使用微信浏览器操作！~");
             return false;  
         }
 
@@ -132,7 +133,7 @@ seajs.use(['util','jweixin'], function(a){
             appid : 'wxcc5c198d146a1779'
         };
         
-        $.post(a.apiUrl.weixinUnifiedorderURL,postData,function(response){
+        $.post(base.weixinUnifiedorderURL,postData,function(response){
             var res = JSON.parse(response);
             console.log(res);            
             var nonce_str = res.data.nonce_str,
@@ -142,7 +143,7 @@ seajs.use(['util','jweixin'], function(a){
             var time = numTime.toString();   
 
             //微信JS签名
-            $.get(a.apiUrl.wxSignURL,{'appid':'wxcc5c198d146a1779','url':url},function(response){ 
+            $.get(base.wxSignURL,{'appid':'wxcc5c198d146a1779','url':url},function(response){ 
                 wx.config({
                     debug     : false,
                     appId     : 'wxcc5c198d146a1779',

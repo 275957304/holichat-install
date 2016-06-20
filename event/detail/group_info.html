@@ -13,7 +13,7 @@
 <meta name="webcrawlers" content="all" />
 <link rel="stylesheet" type="text/css" href="../../dist/css/hlq.min.css">
 <script src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
-<script type="text/javascript" src="../../dist/js/seajs/2.1.1/sea.js"></script>
+<script type="text/javascript" src="../../dist/js/sea.js"></script>
 <script type="text/javascript" src="../../dist/js/sea_config.js"></script>
 <style>
 .weui_cells_title{background: #e2e2e2;color: #666; font-size: 12px; padding: 5px 10px;}
@@ -34,27 +34,28 @@
 	</div>
 </div>
 <script type="text/javascript">
-seajs.use(['util','idcard','base64'], function(a){
+var requireFun = ['zepto','base','idcard','base64','jweixin'];
+seajs.use(requireFun, function(zepto,base){
 
-    var event_id = a.getURLVar('event_id'),
-		project_id = a.getURLVar('event_project_id'),
-		group_id = a.getURLVar('event_group_id'),
+    var event_id = base.getURLVar('event_id'),
+		project_id = base.getURLVar('event_project_id'),
+		group_id = base.getURLVar('event_group_id'),
 		key = [],
 		isTeam = false;
 	console.log(project_id);
 	console.log(group_id);
     $.ajax({        
-        url: a.apiUrl.getEnrollInfoURL,
+        url: base.getEnrollInfoURL,
         type: 'get',
         data: {
-            session:a.getItem("session"),
-            uid:a.getItem("uid"),
+            session:base.getItem("session"),
+            uid:base.getItem("uid"),
             event_id:event_id
         },
         dataType: 'json',
 		async: false,
         beforeSend : function(){
-            a.tips("加载中...",1);
+            base.tips("加载中...",1);
         },
         success: function(data){
             $('.tips').hide();       
@@ -96,7 +97,7 @@ seajs.use(['util','idcard','base64'], function(a){
 			
         },
         error: function(res) {
-            a.tips("网络有点卡");
+            base.tips("网络有点卡");
         }
     });	
 
@@ -145,9 +146,9 @@ seajs.use(['util','idcard','base64'], function(a){
             phone ="",
             sex = "";			
 			
-		team_name = a.toUnicode($("input[name='team_name']").val());
+		team_name = base.toUnicode($("input[name='team_name']").val());
 		if(team_name == ""){
-			a.tips("请填队伍名称");
+			base.tips("请填队伍名称");
 			return false;
 		};
 		var merge ={};
@@ -161,7 +162,7 @@ seajs.use(['util','idcard','base64'], function(a){
 				if($("input[name='truename']").length > 0){
 					truename = $("input[name='truename']").eq(i).val();
 					if(truename == ""){
-						a.tips("请填写参赛者"+ (i+1) +"姓名");
+						base.tips("请填写参赛者"+ (i+1) +"姓名");
 						$("input[name='truename']").focus();
 						return false;
 					}
@@ -170,11 +171,11 @@ seajs.use(['util','idcard','base64'], function(a){
 				if($("input[name='idcard']").length > 0){
 					idcard = $("input[name='idcard']").eq(i).val();
 					if(idcard == ""){
-						a.tips("请填参赛者"+ (i+1) +"身份证");
+						base.tips("请填参赛者"+ (i+1) +"身份证");
 						$("input[name='idcard']").focus();
 						return false;
 					}else if(!checkCard(idcard)){
-						a.tips("参赛者"+ (i+1) +"身份证号码不正确");
+						base.tips("参赛者"+ (i+1) +"身份证号码不正确");
 						$("input[name='idcard']").val("").focus();
 						return false;
 					}
@@ -183,11 +184,11 @@ seajs.use(['util','idcard','base64'], function(a){
 				if($("input[name='phone']").length > 0){
 					phone = $("input[name='phone']").eq(i).val();
 					if(phone == ""){
-						a.tips("请填参赛者"+ (i+1) +"联系电话");
+						base.tips("请填参赛者"+ (i+1) +"联系电话");
 						$("input[name='phone']").focus();
 						return false;
-					}else if(!a.isPhone(phone)){
-						a.tips("请填参赛者"+ (i+1) +"电话号码不正确");
+					}else if(!base.isPhone(phone)){
+						base.tips("请填参赛者"+ (i+1) +"电话号码不正确");
 						$("input[name='phone']").val("").focus();
 						return false;
 					}
@@ -198,11 +199,11 @@ seajs.use(['util','idcard','base64'], function(a){
 				};
 				
 				if(val == ""){
-					a.tips("请填参赛者"+ (i+1) +"的" + field);
+					base.tips("请填参赛者"+ (i+1) +"的" + field);
 					return false;
 				}
 				
-				enroll_params[k] = a.toUnicode(val);
+				enroll_params[k] = base.toUnicode(val);
 			}			
 			dataAfter.push(enroll_params);
         };
@@ -221,17 +222,17 @@ seajs.use(['util','idcard','base64'], function(a){
 		var enroll = []
         $.ajax({
             type: 'POST',
-            url: a.apiUrl.eventEnrollURL,   //上线这个地址要修改, base文件有增加一个 toUnicode
+            url: base.eventEnrollURL,   //上线这个地址要修改, base文件有增加一个 toUnicode
             data: {
                 event_id : event_id,
                 entrance_type: 'a',
                 entrance_community_cid : 0,
-                session:a.getItem('session'), 
+                session:base.getItem('session'), 
                 event_enroll_data: base64
             },
             dataType: 'json',
             beforeSend : function(){
-                a.tips("加载中...",1);
+                base.tips("加载中...",1);
             },
             success: function(data){
 				console.log(data);
@@ -245,7 +246,7 @@ seajs.use(['util','idcard','base64'], function(a){
 					};					
 				}
 				if(data.ret == 6161){
-                    a.tips("队伍队名己存在");
+                    base.tips("队伍队名己存在");
 					$("input[name='team_name']").val("").focus();
                     return false; 
                 }
@@ -258,31 +259,8 @@ seajs.use(['util','idcard','base64'], function(a){
     });
 	
 	
-	//禁用微信分享
-	var href = window.location.href;
-	var url = href.split('#')[0];
-	$.ajax({
-		type: 'get',
-		url: a.apiUrl.wxSignURL,
-		data: {
-			appid:'wxcc5c198d146a1779', 
-			url:url
-		},
-		dataType: 'json',
-		success: function(data){
-			wx.config({
-				debug     : false, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
-				appId     : "wxcc5c198d146a1779", // 必填，公众号的唯一标识
-				timestamp : data.data.timestamp, // 必填，生成签名的时间戳
-				nonceStr  : data.data.noncestr, // 必填，生成签名的随机串
-				signature : data.data.signature,// 必填，签名，见附录1
-				jsApiList : ["onMenuShareTimeline", "onMenuShareAppMessage", "onMenuShareQQ", "onMenuShareWeibo"] // 必填，需要使用的JS接口列表，所有JS接口列表见附录2
-			});
-			wx.ready(function(){		
-				wx.hideOptionMenu();
-			});
-		}
-	});
+    //禁止微信
+	base.hideOptionMenuWx();
 	
 });
 </script>
